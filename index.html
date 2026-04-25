@@ -595,7 +595,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
         <div class="fg"><label class="fl">Adresse e-mail *</label><input type="email" class="fi" id="rg-e" placeholder="votre@email.com"></div>
         <div class="fg"><label class="fl">Confirmer l'e-mail *</label><input type="email" class="fi" id="rg-e2" placeholder="Confirmez votre e-mail"></div>
         <div class="fg"><label class="fl">Mot de passe *</label><div class="iw"><input type="password" class="fi" id="rg-pw" placeholder="Minimum 6 caractères"><button class="tpw" onclick="tpw('rg-pw',this)" type="button">👁️</button></div></div>
-        <div class="fg"><label class="fl">Confirmer le mot de passe *</label><div class="iw"><input type="password" class="fi" id="rg-pw2" placeholder="Retapez le mot de passe"><button class="tpw" onclick="tpw('rg-pw2',this)" type="button">👁️</button></div></div>
+        <div class="fg"><label class="fl">Confirmer le mot de passe *</label><div class="iw"><input type="password" class="fi" id="rg-pw2" placeholder="Retapez le mot de passe" onkeydown="if(event.key==='Enter')doRegister()"><button class="tpw" onclick="tpw('rg-pw2',this)" type="button">👁️</button></div></div>
         <div class="fg"><label class="fl">Je suis... *</label><div class="utg"><button class="utb sel" id="t-stag" onclick="selType('stagiaire')"><span class="ti">🎓</span>Stagiaire</button><button class="utb" id="t-form" onclick="selType('formateur')"><span class="ti">📚</span>Formateur</button></div></div>
         <div class="warn-box">⚠️ <span>Notez votre adresse mail et votre mot de passe. <strong>Aucun mail ne sera envoyé.</strong></span></div>
         <div class="info-box">🔑 <span>En cas d'oubli de mot de passe, utilisez la fonction <strong>"Mot de passe oublié"</strong> sur la page de connexion pour récupérer votre accès.</span></div>
@@ -621,19 +621,19 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
       <div class="auth-box fade-in">
         <h1>Se connecter</h1>
         <p class="sub">Ravi de vous revoir ! Entrez vos identifiants</p>
-        <div class="fg"><label class="fl">Adresse e-mail</label><input type="email" class="fi" id="li-e" placeholder="votre@email.com" placeholder="votre@email.com"></div>
-        <div class="fg"><label class="fl">Mot de passe</label><div class="iw"><input type="password" class="fi" id="li-pw" placeholder="Votre mot de passe" placeholder="Votre mot de passe"><button class="tpw" onclick="tpw('li-pw',this)" type="button">👁️</button></div></div>
+        <div class="fg"><label class="fl">Adresse e-mail</label><input type="email" class="fi" id="li-e" placeholder="votre@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <div class="fg"><label class="fl">Mot de passe</label><div class="iw"><input type="password" class="fi" id="li-pw" placeholder="Votre mot de passe" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"><button class="tpw" onclick="tpw('li-pw',this)" type="button">👁️</button></div></div>
         <div class="fl-right"><a onclick="goTo('page-forgot')">🔑 Mot de passe oublié ?</a></div>
-        <button class="bsub" onclick="doLogin()">Se connecter →</button>
+        <button class="bsub" id="login-submit-btn" onclick="doLogin()">Se connecter →</button>
         <div class="divider">ou</div>
-        <details style="margin-top:8px">
+        <details style="margin-top:8px" id="form-details">
           <summary style="font-size:12px;color:var(--blue);cursor:pointer;user-select:none;padding:6px 0;list-style:none;display:flex;align-items:center;gap:5px">🔒 Accès formateur RÉCIFE</summary>
-          <div style="padding:12px 0">
-        <div id="form-login-fields" style="display:none;margin-top:12px">
-          <div class="fg"><label class="fl">Code formateur RÉCIFE</label><input type="text" class="fi" id="form-code" placeholder="Ex: RECIFE-2024" style="letter-spacing:1px;font-weight:700"></div>
-          <button class="bsub blue" onclick="doLoginF()">✅ Connexion formateur</button>
-        </div>
-        <div class="asw">Pas encore de compte ? <a onclick="goTo('page-register')">S'inscrire</a></div>
+          <div style="padding:10px 0">
+            <div class="fg"><label class="fl">Code formateur RÉCIFE</label><input type="text" class="fi" id="form-code" placeholder="Ex: RECIFE-2024" style="letter-spacing:1px;font-weight:700"></div>
+            <button class="bsub blue" onclick="doLoginF()">✅ Connexion formateur</button>
+          </div>
+        </details>
+        <div class="asw" style="margin-top:14px">Pas encore de compte ? <a onclick="goTo('page-register')">S'inscrire</a></div>
       </div>
     </div>
   </div>
@@ -676,7 +676,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
         <div class="ss-arr">→</div>
         <div class="ss" id="ss2"><div class="ss-dot">2</div><span>Niveau</span></div>
         <div class="ss-arr">→</div>
-        <div class="ss" id="ss3"><div class="ss-dot">3</div><span>Carte</span></div>
+        <div class="ss" id="ss3"><div class="ss-dot">3</div><span>Départ !</span></div>
       </div>
       <div id="setup-s1">
         <h1 style="font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;margin-bottom:6px">Configuration de votre parcours 🎯</h1>
@@ -696,12 +696,12 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
         <div id="lv-choice" style="display:none;margin:14px 0">
           <p style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600">Choisissez le niveau qui correspond le mieux à votre niveau actuel en français :</p>
           <div class="levels-row" style="justify-content:flex-start">
-            <div class="lv-pill a1" style="cursor:pointer" onclick="selUserLv('A1')">A1</div>
-            <div class="lv-pill a2" style="cursor:pointer" onclick="selUserLv('A2')">A2</div>
-            <div class="lv-pill b1" style="cursor:pointer" onclick="selUserLv('B1')">B1</div>
-            <div class="lv-pill b2" style="cursor:pointer" onclick="selUserLv('B2')">B2</div>
-            <div class="lv-pill c1" style="cursor:pointer" onclick="selUserLv('C1')">C1</div>
-            <div class="lv-pill c2" style="cursor:pointer" onclick="selUserLv('C2')">C2</div>
+            <div class="lv-pill a1" style="cursor:pointer;transition:.2s" onclick="selUserLv('A1')" id="lvpill-A1">A1</div>
+            <div class="lv-pill a2" style="cursor:pointer;transition:.2s" onclick="selUserLv('A2')" id="lvpill-A2">A2</div>
+            <div class="lv-pill b1" style="cursor:pointer;transition:.2s" onclick="selUserLv('B1')" id="lvpill-B1">B1</div>
+            <div class="lv-pill b2" style="cursor:pointer;transition:.2s" onclick="selUserLv('B2')" id="lvpill-B2">B2</div>
+            <div class="lv-pill c1" style="cursor:pointer;transition:.2s" onclick="selUserLv('C1')" id="lvpill-C1">C1</div>
+            <div class="lv-pill c2" style="cursor:pointer;transition:.2s" onclick="selUserLv('C2')" id="lvpill-C2">C2</div>
           </div>
         </div>
         <button class="bsub" onclick="proceedLv()">Continuer →</button>
@@ -722,7 +722,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
   <div style="max-width:720px;margin:36px auto;padding:0 24px">
     <h1 style="font-family:'Baloo 2',cursive;font-size:26px;font-weight:800;margin-bottom:6px">Test de positionnement 🧪</h1>
     <p style="color:var(--muted);margin-bottom:18px">Répondez aux questions pour découvrir votre niveau CECRL.</p>
-    <div class="test-timer-box"><div><div class="tt-lbl">Temps restant</div><div class="tt-num" id="tt-time">20:00</div></div><div style="font-size:12px;font-weight:700;color:var(--orange-d)" id="tt-qlbl">Question 1/15</div></div>
+    <div class="test-timer-box"><div><div class="tt-lbl">Temps restant</div><div class="tt-num" id="tt-time">20:00</div></div><div style="font-size:12px;font-weight:700;color:var(--orange-d)" id="tt-qlbl">Question 1/…</div></div>
     <div id="test-area"></div>
   </div>
 </div>
@@ -818,7 +818,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
         <span>Français<span>Avenir</span></span>
         <button class="hamburger" onclick="closeMobSidebar()" style="display:flex;color:var(--muted)">✕</button>
       </div>
-      <div class="sb-user"><div class="sb-av" style="background:var(--blue)">F</div><div><div class="sb-name">Formateur</div><div class="sb-lv">Espace formateur</div></div></div>
+      <div class="sb-user"><div class="sb-av" id="form-sb-av" style="background:var(--blue)">F</div><div><div class="sb-name" id="form-sb-name">Formateur</div><div class="sb-lv">Espace formateur RÉCIFE</div></div></div>
       <div class="ni active" onclick="showFTab('f-stag')"><span class="ico">👥</span>Stagiaires</div>
       <div class="ni" onclick="showFTab('f-prog')"><span class="ico">📈</span>Progression</div>
       <div class="ni" onclick="showFTab('f-defi')"><span class="ico">⚡</span>Défi collectif</div>
@@ -1007,6 +1007,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
           <div id="ai-nbcorrect-info" style="font-size:12px;color:var(--muted);margin-bottom:10px;padding:8px 12px;background:var(--blue-l);border-radius:var(--rs);border:1px solid var(--blue)">
             ℹ️ <strong>1 bonne réponse</strong> : QCM classique. <strong>2 ou 3 bonnes réponses</strong> : QCM à choix multiples (les apprenants doivent cocher plusieurs cases).
           </div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">⚠️ Nécessite une connexion internet active. La génération peut prendre quelques secondes.</div>
           <button class="bsub" onclick="genererIA()" id="ai-btn">🤖 Générer avec l'IA</button>
           <div class="ai-result" id="ai-result"></div>
         </div>
@@ -1015,6 +1016,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
       <!-- ATTESTATIONS -->
       <div id="f-attest" class="tr-panel fade-in">
         <div class="sh">📜 Attestations</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Les attestations sont disponibles pour les stagiaires ayant atteint <strong>80 % de progression</strong> ou plus.</p>
         <table class="dt">
           <thead><tr><th>Stagiaire</th><th>Niveau validé</th><th>Date</th><th>Attestation</th></tr></thead>
           <tbody id="attest-tbody"></tbody>
@@ -1617,10 +1619,9 @@ const GAMES = [
   {id:'qcm-c1-2',title:'QCM – Figures de style',type:'QCM',lv:'C1',icon:'🎨',cat:'Stylistique',desc:'Métaphore, anaphore, litote...',xp:40},
   {id:'puz-c2-1',title:'Puzzle – Texte littéraire',type:'Puzzle',lv:'C2',icon:'📖',cat:'Littérature',desc:'Reconstituez un extrait littéraire.',xp:50},
 ];
-;
 
 // ============================================================
-// GAMES CATALOG
+// FILL DATABASE — Textes à trous par niveau
 // ============================================================
 
 const FILL_DB = {
@@ -2021,10 +2022,6 @@ function renderParcours(){
 }
 
 
-function showFormLogin(){
-  const f=document.getElementById('form-login-fields');
-  if(f)f.style.display=f.style.display==='none'?'block':'none';
-}
 
 
 const LOADING_TIPS_LIST=[
@@ -2159,8 +2156,13 @@ function doLoginF(){
     return;
   }
   S.user={prenom:'Formateur',nom:'RÉCIFE',email:'formateur@recife.fr',type:'formateur'};
-  showToast('Connexion formateur RÉCIFE réussie !','success');
-  setTimeout(()=>{goTo('page-form');showFTab('f-stag');},500);
+  showToast('Connexion formateur RÉCIFE réussie ! 👋','success');
+  setTimeout(()=>{
+    // Update formateur sidebar name
+    const nav=document.getElementById('form-sb-name');if(nav)nav.textContent='Formateur RÉCIFE';
+    const av=document.getElementById('form-sb-av');if(av)av.textContent='F';
+    goTo('page-form');showFTab('f-stag');
+  },500);
 }
 function doLogout(){
   saveUserData();
@@ -2202,7 +2204,16 @@ function genPw(){const c='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789
 let dispSel='essentiels',lvOptSel='test';
 function selDisp(d){dispSel=d;document.getElementById('d-ess').classList.toggle('sel',d==='essentiels');document.getElementById('d-av').classList.toggle('sel',d==='avenir');}
 function selLvOpt(o){lvOptSel=o;document.getElementById('o-test').classList.toggle('sel',o==='test');document.getElementById('o-know').classList.toggle('sel',o==='know');document.getElementById('lv-choice').style.display=o==='know'?'block':'none';}
-function selUserLv(lv){S.level=lv;showToast(`Niveau ${lv} sélectionné !`,'success');}
+function selUserLv(lv){
+  S.level=lv;
+  // Visual feedback: highlight selected pill
+  document.querySelectorAll('[id^="lvpill-"]').forEach(el=>{
+    el.style.transform='';el.style.boxShadow='';
+  });
+  const el=document.getElementById('lvpill-'+lv);
+  if(el){el.style.transform='scale(1.12)';el.style.boxShadow='0 0 0 3px white, 0 0 0 5px currentColor';}
+  showToast(`Niveau ${lv} sélectionné !`,'success');
+}
 function nextSetup(s){
   if(s===2){
     document.getElementById('setup-s1').style.display='none';
