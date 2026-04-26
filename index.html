@@ -806,7 +806,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 
 <!-- ===== PAGE GAME PLAYER ===== -->
 <div class="page" id="page-game">
-  <nav class="navbar"><div class="nav-logo">Français<span>Avenir</span></div><button class="nbtn ghost" onclick="showTab('t-games');goTo('page-dash')">← Quitter</button></nav>
+  <nav class="navbar"><div class="nav-logo">Français<span>Avenir</span></div><button class="nbtn ghost" onclick="clearInterval(window._gameTimer);if(window.speechSynthesis)window.speechSynthesis.cancel();showTab('t-games');goTo('page-dash')">← Quitter</button></nav>
   <div style="max-width:760px;margin:36px auto;padding:0 24px" id="game-area"></div>
 </div>
 
@@ -1171,6 +1171,48 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
     <button class="bsub" style="margin-top:4px" onclick="saveAudioGame()">💾 Enregistrer le jeu</button>
   </div>
 </div>
+<!-- Modal nouveau code récupération formateur -->
+<div class="modal-ov" id="m-new-recovery">
+  <div class="modal-box" style="text-align:center;max-width:420px">
+    <button class="modal-close" onclick="closeModal('m-new-recovery')">✕</button>
+    <div style="font-size:36px;margin-bottom:8px">🔑</div>
+    <h2 class="modal-title" style="text-align:center">Code réinitialisé</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Nouveau code de récupération pour <strong id="new-recovery-stag"></strong> :</p>
+    <div style="background:var(--green-l);border:2px solid var(--green);border-radius:var(--r);padding:16px;margin-bottom:14px">
+      <div style="font-family:monospace;font-size:26px;font-weight:800;color:var(--green-d);letter-spacing:4px" id="new-recovery-code"></div>
+    </div>
+    <div class="warn-box">⚠️ Transmettez ce code au stagiaire. Il ne sera plus visible ensuite.</div>
+    <button class="bsub" onclick="closeModal('m-new-recovery')">✅ Compris</button>
+  </div>
+</div>
+
+<!-- Modal code de récupération — affiché après inscription -->
+<div class="modal-ov" id="m-recovery">
+  <div class="modal-box" style="text-align:center;max-width:440px">
+    <div style="font-size:48px;margin-bottom:10px">🎉</div>
+    <h2 class="modal-title" style="text-align:center">Compte créé !</h2>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:18px">Bienvenue <strong id="recovery-name"></strong> ! Notez absolument votre code de récupération ci-dessous. Il vous permettra de réinitialiser votre mot de passe si vous l'oubliez.</p>
+    <div style="background:var(--green-l);border:2px solid var(--green);border-radius:var(--r);padding:18px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--green-d);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">🔑 Votre code de récupération</div>
+      <div id="recovery-code-display" style="font-family:monospace;font-size:28px;font-weight:800;color:var(--green-d);letter-spacing:4px"></div>
+    </div>
+    <div style="background:var(--orange-l);border:1.5px solid var(--orange);border-radius:var(--rs);padding:12px;font-size:12px;font-weight:600;color:var(--orange-d);margin-bottom:18px;text-align:left">
+      ⚠️ <strong>Notez ce code maintenant.</strong> Il ne sera affiché qu'une seule fois. Sans lui, vous ne pourrez pas récupérer votre compte si vous oubliez votre mot de passe.
+    </div>
+    <button class="bsub" onclick="closeModal('m-recovery');goTo('page-setup')">✅ J'ai noté mon code → Continuer</button>
+  </div>
+</div>
+
+<!-- Résultat jeu -->
+<!-- Résultat jeu -->
+<div class="modal-ov" id="m-result">
+  <div class="modal-box" style="max-width:560px">
+    <button class="modal-close" onclick="clearInterval(window._gameTimer);if(window.speechSynthesis)window.speechSynthesis.cancel();closeModal('m-result')">✕</button>
+    <h2 class="modal-title">🎯 Résultats</h2>
+    <div id="res-modal-body"></div>
+  </div>
+</div>
+
 <!-- Modal nouveau code récupération formateur -->
 <div class="modal-ov" id="m-new-recovery">
   <div class="modal-box" style="text-align:center;max-width:420px">
@@ -1810,6 +1852,7 @@ function playSound(type){
     const o=ctx.createOscillator(),g=ctx.createGain();
     o.connect(g);g.connect(ctx.destination);
     if(type==='correct'){o.frequency.value=880;g.gain.setValueAtTime(.3,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.4);o.start();o.stop(ctx.currentTime+.4);}
+    else if(type==='correct'){o.frequency.setValueAtTime(660,ctx.currentTime);o.frequency.setValueAtTime(880,ctx.currentTime+.1);g.gain.setValueAtTime(.25,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.35);o.start();o.stop(ctx.currentTime+.35);}
     else if(type==='wrong'){o.frequency.value=220;o.type='sawtooth';g.gain.setValueAtTime(.2,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.3);o.start();o.stop(ctx.currentTime+.3);}
     else if(type==='levelup'){
       [523,659,784,1047].forEach((f,i)=>{
@@ -2034,6 +2077,18 @@ const LOADING_TIPS_LIST=[
 // NAVIGATION
 // ============================================================
 function goTo(id){
+  // Nettoyer le jeu si on quitte page-game
+  if(id!=='page-game'){
+    clearInterval(window._gameTimer);
+    if(window.speechSynthesis)window.speechSynthesis.cancel();
+    const area=document.getElementById('game-area');
+    if(area){
+      // Conserver le titre h1 mais supprimer le contenu du jeu
+      const title=area.querySelector('h1');
+      area.innerHTML='';
+      if(title)area.appendChild(title);
+    }
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const p=document.getElementById(id);
   if(p)p.classList.add('active');
@@ -2143,6 +2198,8 @@ function doLogin(){
     S.xp=0;S.missions=0;S.badges=['A1'];S.streak=0;S.completedGames={};S.gameHistory=[];
   }
   logPresence();
+  // Sauvegarder l'email pour restauration de session
+  try{localStorage.setItem('fa_last_email',e.toLowerCase());}catch(ex){}
   showToast(`Bienvenue${loaded?' de retour':''}, ${acc.prenom} ! 👋`,'success');
   if(acc.type==='formateur'){setTimeout(()=>{goTo('page-form');showFTab('f-stag');},500);}
   else{setTimeout(()=>{updSidebar();goTo('page-dash');showTab('t-dash');updDash();},500);}
@@ -2166,6 +2223,7 @@ function doLoginF(){
 }
 function doLogout(){
   saveUserData();
+  try{localStorage.removeItem('fa_last_email');}catch(e){}
   S.user=null;S.xp=0;S.missions=0;S.badges=['A1'];S.streak=0;S.streakDate='';
   S.completedGames={};S.gameHistory=[];S.groups=[];S.customGames=[];
   S.defiCustomGameIds=[];S.classeCustomGameId=null;
@@ -2507,64 +2565,131 @@ function launchGame(id){
 }
 
 // QCM
-function launchQCM(g,c){
-  // Use custom questions if available
-  // For Audio games: only pick questions that have an audio field
-  let pool=[...QDB[g.lv]||QDB["A1"]];
-  if(g.type==="Audio"){pool=pool.filter(q=>q.audio&&q.audio.length>0);if(pool.length===0)pool=[...QDB[g.lv]||QDB["A1"]];}
+function launchQCM(g,area){
+  // ── pool de questions ──
+  let pool;
+  if(g.cat==='Compréhension écrite'){pool=[...(QDB['LECT']||QDB['A1'])];}
+  else{pool=[...(QDB[g.lv]||QDB['A1'])];}
+  if(g.type==='Audio'){pool=pool.filter(q=>q.audio&&q.audio.length>0);if(pool.length===0)pool=[...(QDB[g.lv]||QDB['A1'])];}
   const qs=g.questions||(pool.sort(()=>Math.random()-.5).slice(0,5));
   let cur=0,score=0,errors=[],answered=false;
-  let timeLeft=g.type==='Audio'?90:60; // seconds per game
+
+  // ── timer unique hors de render ──
+  let timeLeft=g.type==='Audio'?90:60;
   clearInterval(window._gameTimer);
-  clearInterval(window._gameTimer);
+  window._gameTimer=setInterval(()=>{
+    timeLeft--;
+    const el=document.getElementById('gp-timer-disp');
+    if(el){
+      el.textContent=Math.floor(timeLeft/60)+':'+(timeLeft%60).toString().padStart(2,'0');
+      if(timeLeft<=10)el.classList.add('urgent');
+      else el.classList.remove('urgent');
+    }
+    if(timeLeft<=0){
+      clearInterval(window._gameTimer);
+      showRes(score,qs.length,g.xp,[{q:'Temps écoulé',given:'—',correct:'—',expl:'Le temps imparti est dépassé.'}],g.id,g.title);
+    }
+  },1000);
+
+  // ── checkQ unique hors de render ──
+  window.checkQ=(btn,idx,correct,expl,optsArr)=>{
+    if(answered)return;
+    answered=true;
+    const isOk=idx===correct;
+    document.querySelectorAll('.gp-opt').forEach(b=>{
+      b.disabled=true;
+      if(parseInt(b.dataset.idx)===correct)b.classList.add('correct');
+    });
+    if(!isOk){
+      btn.classList.add('wrong');
+      const q=qs[cur];
+      errors.push({q:q.q,given:optsArr[idx]||'—',correct:optsArr[correct]||'—',expl:q.expl||''});
+    } else {
+      score++;
+    }
+    const fb=document.getElementById('gfb');
+    if(fb){
+      fb.className='gp-fb show '+(isOk?'correct':'wrong');
+      fb.innerHTML=(isOk?'✅ Bonne réponse !':'❌ Réponse incorrecte.')+(expl?`<div class="expl">💡 ${expl}</div>`:'');
+    }
+    const nxt=document.getElementById('gnxt');
+    if(nxt)nxt.classList.add('show');
+    showMasc(isOk?"Excellent ! Continue ! 🔥":"Ne t'inquiète pas ! Regarde l'explication. 😊",isOk?"léo.png":"lina.png");
+    playSound(isOk?'correct':'wrong');
+  };
+
+  // ── render une question ──
   const render=()=>{
-    if(cur>=qs.length){showRes(score,qs.length,g.xp,errors,g.id,g.title);return;}
+    if(cur>=qs.length){
+      clearInterval(window._gameTimer);
+      showRes(score,qs.length,g.xp,errors,g.id,g.title);
+      return;
+    }
+    answered=false;
     const q=qs[cur];
     const opts=q.opts?q.opts.map((o,i)=>({o,i})).sort(()=>Math.random()-.5):[];
-    answered=false;
     const letters=['A','B','C','D'];
-    c.querySelector('.gc-content')?.remove();
-    const d=document.createElement('div');d.className='gc-content';
+
+    // Nettoyer le contenu précédent sans détruire le container
+    const old=area.querySelector('.gc-content');
+    if(old)old.remove();
+
+    const d=document.createElement('div');
+    d.className='gc-content';
+
     let html='<div class="gp">';
-    html+=`<div class="gp-hdr"><button style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted)" onclick="clearInterval(window._gameTimer);showTab('t-games');goTo('page-dash')">✕</button><div class="gp-prog"><div class="gp-fill" style="width:${cur/qs.length*100}%"></div></div><div class="gp-cnt">${cur+1}/${qs.length}</div><div class="gp-timer" id="gp-timer-disp">${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2,'0')}</div></div>`;
-    // Start timer after render
-    setTimeout(()=>{
-      window._gameTimer=setInterval(()=>{
-        timeLeft--;
-        const el=document.getElementById('gp-timer-disp');
-        if(el){el.textContent=Math.floor(timeLeft/60)+':'+(timeLeft%60).toString().padStart(2,'0');if(timeLeft<=10)el.classList.add('urgent');else el.classList.remove('urgent');}
-        if(timeLeft<=0){clearInterval(window._gameTimer);showRes(score,qs.length,g.xp,[{q:'Temps écoulé',given:'—',correct:'—',expl:'Le temps imparti est dépassé.'}],g.id,g.title);}
-      },1000);
-    },100);
+    // Header avec progress et timer
+    html+=`<div class="gp-hdr">
+      <button style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted)" onclick="clearInterval(window._gameTimer);showTab('t-games');goTo('page-dash')">✕</button>
+      <div class="gp-prog"><div class="gp-fill" style="width:${cur/qs.length*100}%"></div></div>
+      <div class="gp-cnt">${cur+1}/${qs.length}</div>
+      <div class="gp-timer" id="gp-timer-disp">${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2,'0')}</div>
+    </div>`;
+
     // Audio
-    const audioText=q.audio||null;
-    if(audioText){html+=`<div class="audio-box"><button class="play-btn" onclick="speakText('${audioText.replace(/'/g,"\\'")}',this)">▶️</button><div style="flex:1"><div class="audio-txt">🎧 Cliquez pour écouter</div><div class="audio-progress"><div class="audio-prog-fill"></div></div></div></div>`;}
-    // Video link
-    if(q.videoUrl){const ytId=q.videoUrl.match(/(?:v=|youtu\.be\/)([^&?]+)/)?.[1];html+=ytId?`<div style="margin-bottom:14px;border-radius:var(--rs);overflow:hidden"><iframe width="100%" height="200" src="https://www.youtube.com/embed/${ytId}" frameborder="0" allowfullscreen style="border-radius:var(--rs)"></iframe></div>`:'';}
-    if(q.ctx){html+=`<div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">${q.ctx}</div>`;}
+    if(q.audio){
+      const safeAudio=q.audio.replace(/'/g,"\'");
+      html+=`<div class="audio-box"><button class="play-btn" onclick="speakText('${safeAudio}',this)">▶️</button><div style="flex:1"><div class="audio-txt">🎧 Cliquez pour écouter</div></div></div>`;
+    }
+
+    // Vidéo YouTube
+    if(q.videoUrl){
+      const ytId=q.videoUrl.match(/(?:v=|youtu\.be\/)([^&?]+)/)?.[1];
+      if(ytId)html+=`<div style="margin-bottom:14px;border-radius:var(--rs);overflow:hidden"><iframe width="100%" height="200" src="https://www.youtube.com/embed/${ytId}" frameborder="0" allowfullscreen></iframe></div>`;
+    }
+
+    if(q.ctx)html+=`<div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">${q.ctx}</div>`;
     html+=`<div class="gp-q">${q.q}</div><div class="gp-opts">`;
-    opts.forEach((item,idx)=>{html+=`<button class="gp-opt" data-idx="${item.i}" onclick="checkQ(this,${item.i},${q.c!==undefined?q.c:q.correct},${JSON.stringify(q.expl||'').replace(/"/g,"'")},${JSON.stringify(q.opts||[]).replace(/"/g,"'")})">${letters[idx]}. ${item.o}</button>`;});
-    html+='</div><div class="gp-fb" id="gfb"></div><button class="gp-next" id="gnxt">Continuer →</button></div>';
-    d.innerHTML=html;c.appendChild(d);
-    document.getElementById('gnxt').addEventListener('click',()=>{cur++;if(window._lastOk)score++;render();});
-    window.checkQ=(btn,idx,correct,expl,opts2)=>{
-      if(answered)return;answered=true;
-      window._lastOk=idx===correct;
-      document.querySelectorAll('.gp-opt').forEach(b=>{b.disabled=true;if(parseInt(b.dataset.idx)===correct)b.classList.add('correct');});
-      if(!window._lastOk){
-        btn.classList.add('wrong');
-        errors.push({q:q.q,given:q.opts[idx],correct:q.opts[correct],expl:q.expl||''});
-      }
-      const fb=document.getElementById('gfb');
-      fb.className='gp-fb show '+(window._lastOk?'correct':'wrong');
-      fb.innerHTML=(window._lastOk?'✅ Bonne réponse !':'❌ Réponse incorrecte.')+(q.expl?`<div class="expl">💡 ${q.expl}</div>`:'');
-      document.getElementById('gnxt').classList.add('show');
-      showMasc(window._lastOk?'Excellent ! Continue ! 🔥':'Ne t\'inquiète pas ! Regarde l\'explication. 😊',window._lastOk?'léo.png':'lina.png');
-    };
+
+    opts.forEach((item,idx)=>{
+      const safeExpl=(q.expl||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      const safeOpts=JSON.stringify(q.opts||[]);
+      html+=`<button class="gp-opt" data-idx="${item.i}" onclick="checkQ(this,${item.i},${q.c!==undefined?q.c:q.correct},'${safeExpl}',${safeOpts})">${letters[idx]}. ${item.o}</button>`;
+    });
+
+    html+=`</div>
+    <div class="gp-fb" id="gfb"></div>
+    <button class="gp-next show" id="gnxt" style="display:none">Continuer →</button>
+    </div>`;
+
+    d.innerHTML=html;
+    area.appendChild(d);
+
+    // Hint raccourcis clavier
+    const hint=document.createElement('p');
+    hint.className='keyboard-hint';
+    hint.textContent='💡 Touches 1-4 pour répondre · Entrée pour continuer';
+    d.appendChild(hint);
+
+    // Bouton Continuer — handler unique, pas dupliqué
+    document.getElementById('gnxt').addEventListener('click',()=>{
+      cur++;
+      render();
+    },{once:true}); // once:true = ne se déclenche qu'une seule fois
   };
+
   render();
 }
-
 // TROUS
 function launchTrous(g,c){
   const lvKey=FILL_DB[g.lv]?g.lv:(g.lv==='A2'?'A2':g.lv==='B2'?'B2':g.lv==='C1'?'C1':g.lv==='C2'?'C2':g.lv==='B1'?'B1':'A1');
@@ -2575,10 +2700,11 @@ function launchTrous(g,c){
   d.innerHTML=`<div class="gp"><p style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:14px">Complétez les phrases avec les formes correctes :</p>${qsData.map((q,i)=>`<div style="margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--border)"><div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:6px">${q.ctx}</div><div class="blank-text">${q.text.replace('_____',`<input type="text" class="blank-inp" id="bl-${i}" placeholder="..." autocomplete="off" autocorrect="off" spellcheck="false" oninput="this.dataset.changed='1'">`)}</div></div>`).join('')}<button class="bsub" onclick="checkTrous(${JSON.stringify(qsData.map(q=>q.blank)).replace(/"/g,"'")})">Vérifier ✅</button><div id="trous-fb" style="margin-top:14px"></div></div>`;
   c.appendChild(d);
   window.checkTrous=(answers)=>{
-    // Block submission if all fields are empty
     const inputs=Array.from(document.querySelectorAll('.blank-inp'));
     const anyFilled=inputs.some(i=>i.value.trim().length>0);
     if(!anyFilled){showToast('Remplissez au moins une réponse avant de valider.','warn');return;}
+    // Normalize: trim + lowercase for comparison
+    const normalize=s=>(s||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
     let ok=0,errors=[];
     answers.forEach((ans,i)=>{
       const inp=document.getElementById(`bl-${i}`);
@@ -2731,13 +2857,55 @@ function showRes(score,total,xpGain,errors,gameId,gameTitle){
     errHtml='<div class="res-errors"><h4>📋 Erreurs à revoir :</h4>'+errors.slice(0,5).map(e=>`<div class="err-item"><div class="err-q">${e.q||''}</div><div class="err-given">❌ Votre réponse : ${e.given||''}</div><div class="err-correct">✅ Bonne réponse : ${e.correct||''}</div><div class="err-expl">💡 ${e.expl||''}</div></div>`).join('')+'</div>';
   }
   document.getElementById('m-result-content').innerHTML=`<div class="res-box"><div class="confetti">${pct>=70?'🎉':'💪'}</div><div class="res-score" style="color:${pct>=70?'var(--green)':'var(--orange)'}">${pct}%</div><div class="res-lbl">${score} bonne${score>1?'s':''} réponse${score>1?'s':''} sur ${total}</div><div style="background:var(--orange-l);padding:10px 18px;border-radius:50px;display:inline-block;font-weight:800;font-size:15px;color:var(--orange-d);margin:10px 0">+${earned} XP gagnés !</div>${errHtml}<div class="res-masc"><img src="${mascImg}" onerror="this.style.background='var(--green)'" style="width:52px;height:52px;border-radius:50%;border:3px solid var(--green);object-fit:cover;object-position:top"><p>${mascMsg}</p></div></div>`;
+  // Stop any playing audio
+  if(window.speechSynthesis)window.speechSynthesis.cancel();
+
+  // Build result modal content
+  const resContainer=document.getElementById('res-modal-body');
+  if(resContainer){
+    // Score display
+    const color=pct>=70?'var(--green-d)':'var(--orange-d)';
+    const emoji=pct>=100?'🏆':pct>=70?'🎉':pct>=50?'👍':'💪';
+
+    // Next game recommendation
+    const allGForRec=[...GAMES,...S.customGames];
+    const notDone=allGForRec.filter(gg=>(!S.completedGames[gg.id]||S.completedGames[gg.id].pct<70)&&gg.lv===S.level&&gg.id!==gameId);
+    const rec=notDone[0];
+    const recHtml=rec?`<div class="next-rec" onclick="closeModal('m-result');launchGame('${rec.id}')">
+      <span style="font-size:22px">${rec.icon||'🎮'}</span>
+      <div><div style="font-weight:700;font-size:13px">Jeu suivant recommandé</div><div style="font-size:11px;color:var(--muted)">${rec.title} · ${rec.lv}</div></div>
+      <span style="margin-left:auto;font-size:18px">→</span>
+    </div>`:'';
+
+    // Errors list
+    const errHtml=errors&&errors.length>0?`<div class="res-errors">
+      <h4>❌ Questions à revoir :</h4>
+      ${errors.map(e=>`<div class="err-item">
+        <div class="err-q">${e.q}</div>
+        <div class="err-given">Votre réponse : ${e.given}</div>
+        <div class="err-correct">Bonne réponse : ${e.correct}</div>
+        ${e.expl?`<div class="err-expl">💡 ${e.expl}</div>`:''}
+      </div>`).join('')}
+    </div>`:'';
+
+    resContainer.innerHTML=`
+      <div class="res-box">
+        <div class="res-score" style="color:${color}">${emoji}</div>
+        <div class="res-score" style="color:${color}">${pct}%</div>
+        <div class="res-lbl">${score} / ${total} bonne${score>1?'s':''} réponse${score>1?'s':''} · +${earned} XP</div>
+        <div class="res-masc">
+          <img src="${pct>=70?'léo.png':'lina.png'}" onerror="this.style.display='none'" style="width:50px;height:50px;border-radius:50%">
+          <p>${pct>=70?'Excellent travail ! Tu maîtrises ce sujet ! 🌟':'Bon effort ! Relis les explications et retente ta chance ! 💪'}</p>
+        </div>
+        ${errHtml}
+        ${recHtml}
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+          <button class="bsub" style="flex:1" onclick="closeModal('m-result');clearInterval(window._gameTimer);showTab('t-games');goTo('page-dash')">← Retour aux jeux</button>
+          <button class="bsub blue" style="flex:1" onclick="closeModal('m-result');launchGame('${gameId||''}')">🔄 Rejouer</button>
+        </div>
+      </div>`;
+  }
   openModal('m-result');
-  // Next game recommendation
-  const allGForRec=[...GAMES,...S.customGames];
-  const notDone=allGForRec.filter(g=>(!S.completedGames[g.id]||S.completedGames[g.id].pct<70)&&g.lv===S.level);
-  const rec=notDone[0]||allGForRec.find(g=>g.lv===S.level&&g.id!==gameId);
-  const recEl=document.getElementById('next-game-rec');
-  if(rec&&recEl){recEl.innerHTML=`<div class="next-rec" onclick="closeModal('m-result');launchGame('${rec.id}')"><span style="font-size:22px">${rec.icon||'🎮'}</span><div><div style="font-weight:700;font-size:13px">Jeu suivant recommandé</div><div style="font-size:11px;color:var(--muted)">${rec.title} · ${rec.lv}</div></div><span style="margin-left:auto;font-size:18px">→</span></div>`;}
 }
 
 // ============================================================
@@ -3663,7 +3831,11 @@ function openModal(id){
   document.querySelectorAll('.modal-ov.open').forEach(m=>{if(m.id!==id)m.classList.remove('open');});
   document.getElementById(id)?.classList.add('open');
 }
-function closeModal(id){document.getElementById(id)?.classList.remove('open');}
+function closeModal(id){
+  document.getElementById(id)?.classList.remove('open');
+  // Stopper le son quand le modal résultat se ferme
+  if(id==='m-result'&&window.speechSynthesis)window.speechSynthesis.cancel();
+}
 document.addEventListener('click',e=>{
   document.querySelectorAll('.modal-ov.open').forEach(m=>{if(e.target===m)m.classList.remove('open');});
   // Close glossaire if click outside
@@ -3689,12 +3861,28 @@ renderGl();
 toggleFgField();
 renderGameFields();
 
-// Écran de chargement géré entièrement par CSS (animation loaderFadeOut)
-// Sécurité JS : forcer la suppression après 3s au cas où
+// Écran de chargement — sécurité JS
 setTimeout(()=>{
   const ls=document.getElementById('loading-screen');
   if(ls)ls.style.display='none';
 },3000);
+
+// ── Restaurer la session après F5 ──
+(function restoreSession(){
+  try{
+    const lastEmail=localStorage.getItem('fa_last_email');
+    if(!lastEmail)return;
+    if(loadUserData(lastEmail)){
+      // Session restaurée — aller directement au bon espace
+      if(S.user&&S.user.type==='formateur'){
+        goTo('page-form');showFTab('f-stag');
+      } else if(S.user){
+        updSidebar();updDash();goTo('page-dash');showTab('t-dash');
+      }
+    }
+  }catch(e){}
+})();
+
 // Charger la langue sauvegardée
 try{const l=localStorage.getItem('fa_lang');if(l)setLang(l);}catch(e){}
 
