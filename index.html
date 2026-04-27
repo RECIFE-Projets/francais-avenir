@@ -1544,75 +1544,79 @@ const GL_DATA = [
 // ============================================================
 const QDB = {
   A1:[
-    // Questions sans audio — vocabulaire/grammaire
-    {q:'Comment dit-on "Hello" en français ?',opts:['Au revoir','Merci','Bonjour','S\'il vous plaît'],c:2,expl:'"Bonjour" est la traduction de "Hello". C\'est la salutation standard en français.',audio:null},
-    {q:'Quelle est la traduction française de "cat" (anglais) ?',opts:['Chien','Chat','Cheval','Oiseau'],c:1,expl:'"Chat" est le mot français pour désigner l\'animal félin domestique.',audio:null},
-    {q:'Comment dit-on le nombre "three" (anglais) en français ?',opts:['Deux','Quatre','Trois','Cinq'],c:2,expl:'La suite des nombres : un, deux, trois, quatre, cinq...',audio:null},
-    {q:'Quel est le féminin du mot "un ami" ?',opts:['Un amie','Une amie','Une ami','Un amis'],c:1,expl:'Le féminin de "un ami" est "une amie". On ajoute un "e" au féminin.',audio:null},
+    {q:'Comment dit-on "Hello" en français ?',opts:['Au revoir','Merci','Bonjour','Bonsoir'],c:2,expl:'"Bonjour" est la salutation standard du matin et de la journée.',audio:null},
+    {q:'Quel est le féminin de "un ami" ?',opts:['Un amie','Une amie','Une ami','Un amis'],c:1,expl:'Le féminin de "un ami" est "une amie". On ajoute un "e" au féminin.',audio:null},
+    {q:'Comment dit-on "please" en français ?',opts:['Merci','Pardon','S\'il vous plaît','De rien'],c:2,expl:'"S\'il vous plaît" correspond à "please" en anglais.',audio:null},
+    {q:'Quelle couleur est le ciel par beau temps ?',opts:['Rouge','Vert','Bleu','Jaune'],c:2,expl:'Le ciel est bleu par beau temps.',audio:null},
+    {q:'Comment dit-on "cat" (anglais) en français ?',opts:['Chien','Chat','Cheval','Oiseau'],c:1,expl:'"Chat" est le mot français pour désigner le félin domestique.',audio:null},
     {q:'Quel objet utilise-t-on pour écrire ?',opts:['Une fourchette','Un stylo','Une assiette','Un livre'],c:1,expl:'On écrit avec un stylo ou un crayon.',audio:null},
-    {q:'Comment dit-on "please" en français ?',opts:['Merci','Pardon','S\'il vous plaît','De rien'],c:2,expl:'"S\'il vous plaît" est la traduction de "please". C\'est la formule de politesse.',audio:null},
-    // Questions AVEC audio — obligatoirement avec audio text
-    {q:'🎧 Écoutez et choisissez la bonne salutation du matin.',opts:['Bonsoir','Bonne nuit','Bonjour','Au revoir'],c:2,expl:'"Bonjour" s\'utilise le matin et la journée. "Bonsoir" s\'utilise le soir.',audio:'Bonjour ! Comment allez-vous ce matin ?'},
-    {q:'🎧 Écoutez et identifiez le chiffre prononcé.',opts:['Deux','Cinq','Sept','Neuf'],c:2,expl:'Sept se prononce "sèt" avec un t final audible.',audio:'Le numéro gagnant est le sept !'},
-    {q:'🎧 Écoutez et choisissez la couleur entendue.',opts:['Bleu','Vert','Rouge','Jaune'],c:0,expl:'"Bleu" comme le ciel ou la mer. "Blue" en anglais.',audio:'Ma voiture préférée est de couleur bleu foncé.'},
-    {q:'🎧 Écoutez et identifiez la phrase de présentation.',opts:['Je m\'appelle Marie.','Au revoir !','Merci beaucoup.','Où est la gare ?'],c:0,expl:'Pour se présenter on dit "Je m\'appelle + prénom".',audio:'Bonjour, je m\'appelle Marie. Et vous, comment vous appelez-vous ?'},
-    {q:'🎧 Écoutez et identifiez ce que la personne commande.',opts:['Du pain','Un café','De l\'eau','Une salade'],c:1,expl:'Au café on peut commander : un café, un thé, un jus d\'orange...',audio:'Excusez-moi, je voudrais un café s\'il vous plaît, merci !'},
-    {q:'🎧 Écoutez et choisissez l\'animal mentionné.',opts:['Un chat','Un chien','Un lapin','Un oiseau'],c:1,expl:'"Chien" désigne le canidé domestique. En anglais : "dog".',audio:'Attention ! Il y a un grand chien dans le jardin !'},
+    {q:'Comment se présente-t-on ?',opts:['Je m\'appelle...','J\'ai faim','Au revoir','Merci'],c:0,expl:'Pour se présenter, on dit "Je m\'appelle [prénom]".',audio:null},
+    {q:'Quel est le contraire de "grand" ?',opts:['Gros','Court','Petit','Loin'],c:2,expl:'"Petit" est le contraire de "grand".',audio:null},
+    {q:'🎧 Écoutez et choisissez la bonne salutation.',opts:['Bonsoir','Bonne nuit','Bonjour','Au revoir'],c:2,expl:'"Bonjour" s\'utilise le matin et la journée.',audio:'Bonjour ! Comment allez-vous ce matin ?'},
+    {q:'🎧 Quel chiffre entendez-vous ?',opts:['Deux','Cinq','Sept','Neuf'],c:2,expl:'Sept se prononce "sèt" avec un t final audible.',audio:'Le numéro gagnant est le sept !'},
+    {q:'🎧 Quelle couleur entendez-vous ?',opts:['Rouge','Vert','Bleu','Jaune'],c:2,expl:'"Bleu" comme le ciel ou la mer.',audio:'Ma voiture préférée est de couleur bleu foncé.'},
+    {q:'🎧 Comment s\'appelle la personne ?',opts:['Marie','Sophie','Ahmed','Lucas'],c:2,expl:'La personne dit "Je m\'appelle Ahmed".',audio:'Bonjour, je m\'appelle Ahmed et j\'habite à Lyon.'},
   ],
   A2:[
-    // Questions sans audio
-    {q:'Le bus arrive _____ 8 heures.',opts:['de','à','en','pour'],c:1,expl:'"À" s\'utilise pour indiquer l\'heure d\'arrivée ou de début.',audio:null},
     {q:'Je _____ au cinéma hier soir.',opts:['vais','irai','suis allé','allais'],c:2,expl:'Passé composé : "je suis allé(e)". Le verbe "aller" se conjugue avec "être".',audio:null},
-    {q:'Mon frère _____ médecin.',opts:['est','a','fait','va'],c:0,expl:'Le verbe "être" sert à indiquer une profession ou un état.',audio:null},
-    {q:'Elle _____ du café tous les matins.',opts:['mange','boit','lit','dort'],c:1,expl:'On "boit" un liquide. On "mange" un solide.',audio:null},
+    {q:'Mon frère _____ médecin.',opts:['est','a','fait','va'],c:0,expl:'Le verbe "être" s\'utilise pour indiquer une profession ou un état.',audio:null},
+    {q:'Elle _____ du café tous les matins.',opts:['mange','boit','lit','dort'],c:1,expl:'On "boit" un liquide. "Boire" est le verbe pour les liquides.',audio:null},
     {q:'Quelle est la question pour demander l\'heure ?',opts:['Quel temps fait-il ?','Quelle heure est-il ?','Où es-tu ?','Comment tu t\'appelles ?'],c:1,expl:'Pour demander l\'heure : "Quelle heure est-il ?" ou "Il est quelle heure ?"',audio:null},
-    // Questions AVEC audio
-    {q:'🎧 Écoutez et choisissez l\'heure entendue.',opts:['Il est 8h','Il est midi','Il est 15h','Il est 20h'],c:1,expl:'"Midi" désigne 12 heures. "Minuit" désigne 0 heure.',audio:'Le déjeuner est servi à midi, comme tous les jours.'},
-    {q:'🎧 Écoutez et identifiez le moyen de transport utilisé.',opts:['Le vélo','Le bus','Le train','La voiture'],c:2,expl:'Le train est un moyen de transport ferroviaire. Gare, quai, billet...',audio:'Je prends le train pour aller à Paris chaque semaine, c\'est plus rapide.'},
-    {q:'🎧 Écoutez et identifiez ce que la personne commande au café.',opts:['Un thé','Un café','Une eau','Un jus d\'orange'],c:1,expl:'Au café français, on commande souvent un café ou une boisson chaude.',audio:'Bonjour ! Je voudrais un café et un croissant, s\'il vous plaît.'},
+    {q:'Je dois _____ le médecin demain.',opts:['voir','vois','vu','voyant'],c:0,expl:'Après "devoir", on utilise l\'infinitif : "je dois voir".',audio:null},
+    {q:'Le bus arrive _____ 8 heures.',opts:['de','à','en','pour'],c:1,expl:'"À" s\'utilise pour indiquer l\'heure : "à 8 heures".',audio:null},
+    {q:'Quel est le passé composé de "finir" ?',opts:['je finissais','j\'ai fini','je finirai','je finisse'],c:1,expl:'"J\'ai fini" est le passé composé. Auxiliaire "avoir" + participe passé "fini".',audio:null},
+    {q:'Comment dire "I am cold" en français ?',opts:['J\'ai chaud','Il fait froid','J\'ai froid','Je suis froid'],c:2,expl:'En français, on dit "J\'ai froid" (avoir + sensation), pas "je suis froid".',audio:null},
+    {q:'🎧 Écoutez et choisissez l\'heure entendue.',opts:['8h00','12h00','15h00','20h00'],c:1,expl:'"Midi" désigne 12h00.',audio:'Le déjeuner est servi à midi, comme tous les jours.'},
+    {q:'🎧 Quel moyen de transport ?',opts:['Le vélo','Le bus','Le train','La voiture'],c:2,expl:'Le train est un moyen de transport ferroviaire.',audio:'Je prends le train pour aller à Paris chaque semaine.'},
+    {q:'🎧 Que commande la personne ?',opts:['Un thé','Un café','Une eau','Un jus d\'orange'],c:1,expl:'Au café français, on commande souvent un café.',audio:'Bonjour ! Je voudrais un café et un croissant, s\'il vous plaît.'},
+    {q:'🎧 Quel est le problème de santé ?',opts:['Mal à la tête','Mal au ventre','Mal aux dents','Mal au dos'],c:0,expl:'"J\'ai mal à la tête" = headache en anglais.',audio:'J\'ai mal à la tête depuis ce matin, je ne me sens pas bien.'},
   ],
   B1:[
-    // Questions sans audio
-    {q:'Bien qu\'il _____ tard, il continue de travailler.',opts:['est','était','soit','serait'],c:2,expl:'"Bien que" est une conjonction de concession qui exige le subjonctif présent.',audio:null},
-    {q:'Lequel est synonyme de "content" ?',opts:['Triste','Heureux','Fatigué','Inquiet'],c:1,expl:'"Content" et "heureux" sont deux synonymes exprimant un état positif.',audio:null},
-    {q:'Il faut que tu _____ cette lettre aujourd\'hui.',opts:['envoie','envoies','envoiera','enverrait'],c:1,expl:'Après "il faut que", on utilise le subjonctif présent. "Envoies" = subjonctif.',audio:null},
-    // Questions AVEC audio
-    {q:'🎧 Écoutez et identifiez le sentiment exprimé.',opts:['La joie','La tristesse','La colère','La surprise'],c:3,expl:'La surprise s\'exprime avec "Quoi ?", "C\'est vrai ?" ou "Vraiment ?".',audio:'Quoi ? Tu déménages à Paris la semaine prochaine ? C\'est vraiment vrai ?'},
-    {q:'🎧 Écoutez et choisissez le temps verbal utilisé.',opts:['Présent','Imparfait','Passé composé','Futur'],c:1,expl:'L\'imparfait décrit des actions habituelles ou des états dans le passé.',audio:'Quand j\'étais enfant, j\'habitais à la campagne et je jouais dehors tous les jours.'},
+    {q:'Quel est le passé composé de "venir" ?',opts:['j\'ai venu','je suis venu','j\'avais venu','je venais'],c:1,expl:'Les verbes de mouvement (venir, aller, partir...) se conjuguent avec "être" au passé composé.',audio:null},
+    {q:'Il _____ à Paris depuis 3 ans.',opts:['habite','habitait','a habité','habitera'],c:0,expl:'"Depuis" + présent = action qui a commencé dans le passé et continue maintenant.',audio:null},
+    {q:'Quel est le passé composé de "partir" ?',opts:['j\'ai parti','je suis parti','j\'avais parti','je partais'],c:1,expl:'"Partir" est un verbe de mouvement qui se conjugue avec "être" : je suis parti(e).',audio:null},
+    {q:'Quand j\'étais enfant, je _____ souvent à la mer.',opts:['vais','suis allé','allais','irai'],c:2,expl:'L\'imparfait exprime les habitudes passées. "Quand j\'étais enfant" demande l\'imparfait.',audio:null},
+    {q:'Il faut que tu _____ tes devoirs.',opts:['fais','as fait','fasses','feras'],c:2,expl:'Après "il faut que", on utilise le subjonctif présent.',audio:null},
+    {q:'Lequel est synonyme de "content" ?',opts:['Triste','Heureux','Fatigué','Inquiet'],c:1,expl:'"Content" et "heureux" sont synonymes : ils expriment un état positif.',audio:null},
+    {q:'Quel est le futur simple de "être" à la 1re personne ?',opts:['je suis','j\'étais','je serai','je sois'],c:2,expl:'Le futur simple de "être" : je serai, tu seras, il sera...',audio:null},
+    {q:'Elle _____ en France l\'année prochaine.',opts:['est allée','allait','va','ira'],c:3,expl:'Le futur simple exprime une action à venir. "L\'année prochaine" indique le futur.',audio:null},
+    {q:'🎧 Quel sentiment est exprimé ?',opts:['La joie','La tristesse','La colère','La surprise'],c:3,expl:'La surprise s\'exprime avec "Quoi ?", "C\'est vrai ?" ou "Vraiment ?".',audio:'Quoi ? Tu déménages à Paris la semaine prochaine ? C\'est vraiment vrai ?'},
+    {q:'🎧 Quel temps verbal est utilisé ?',opts:['Présent','Imparfait','Passé composé','Futur'],c:1,expl:'L\'imparfait décrit des habitudes ou des états dans le passé.',audio:'Quand j\'étais enfant, j\'habitais à la campagne et je jouais dehors tous les jours.'},
+    {q:'🎧 Qu\'a fait la personne hier ?',opts:['Elle a travaillé','Elle est sortie','Elle a regardé la télé','Elle est allée au marché'],c:3,expl:'Le passé composé avec "être" pour "aller" : elle est allée.',audio:'Hier, elle est allée au marché avec sa mère pour acheter des légumes frais.'},
+    {q:'🎧 Quel est le projet de la personne ?',opts:['Chercher du travail','Voyager en Espagne','Apprendre l\'anglais','Acheter une voiture'],c:1,expl:'Le futur proche "je vais + infinitif" exprime un projet immédiat.',audio:'L\'été prochain, je vais voyager en Espagne avec toute ma famille.'},
   ],
   B2:[
-    // Questions sans audio
-    {q:'À condition qu\'il _____ plus tôt, nous aurions pu partir.',opts:['arrive','arrivait','soit arrivé','arriverait'],c:2,expl:'Système hypothétique passé : si + plus-que-parfait → conditionnel passé.',audio:null},
-    {q:'Lequel est un connecteur d\'opposition ?',opts:['Donc','Ainsi','Cependant','Car'],c:2,expl:'"Cependant" exprime une opposition. "Donc" = conséquence. "Car" = cause.',audio:null},
-    {q:'Ce roman, dont l\'auteur _____ célèbre, est épuisé.',opts:['est','soit','étant','a été'],c:0,expl:'Dans une relative introduite par "dont", on utilise l\'indicatif présent.',audio:null},
-    // Questions AVEC audio
-    {q:'🎧 Écoutez et identifiez la figure de style utilisée.',opts:['Métaphore','Comparaison','Hyperbole','Litote'],c:2,expl:'L\'hyperbole est une exagération volontaire pour renforcer l\'expression.',audio:'Il m\'a fallu une éternité pour trouver mes clés ce matin !'},
-    {q:'🎧 Écoutez et identifiez le registre de langue.',opts:['Familier','Courant','Soutenu','Argotique'],c:0,expl:'Le registre familier utilise des raccourcis : "t\'as" pour "tu as", "ça" pour "cela".',audio:'T\'as vu ? Ça marche super bien ce truc, c\'est trop cool !'},
+    {q:'Bien qu\'il _____ tard, il continue de travailler.',opts:['est','était','soit','serait'],c:2,expl:'"Bien que" est une conjonction de concession qui exige le subjonctif présent.',audio:null},
+    {q:'Si j\'avais su, je _____ venu plus tôt.',opts:['serais','suis','serai','sois'],c:0,expl:'Conditionnel passé : si + plus-que-parfait → conditionnel passé.',audio:null},
+    {q:'Il parle comme _____ il était le chef.',opts:['si','que','quand','alors'],c:0,expl:'"Comme si" introduit une comparaison hypothétique et demande le conditionnel.',audio:null},
+    {q:'Quelle est la forme passive de "Le jury a élu le président" ?',opts:['Le président a été élu par le jury','Le président élit le jury','Le jury est élu','Le président sera élu'],c:0,expl:'Forme passive : sujet + être (conjugué) + participe passé + par + agent.',audio:null},
+    {q:'Lequel est un connecteur logique de concession ?',opts:['Donc','Ainsi','Cependant','Par conséquent'],c:2,expl:'"Cependant" introduit une opposition. "Donc" et "par conséquent" expriment la conséquence.',audio:null},
+    {q:'_____ que le temps passe, elle devient plus sage.',opts:['À mesure','Bien','Alors','Malgré'],c:0,expl:'"À mesure que" exprime une évolution progressive parallèle.',audio:null},
+    {q:'🎧 Quelle est la thèse défendue ?',opts:['Le télétravail est néfaste','Le télétravail améliore la productivité','Le télétravail doit être interdit','Le télétravail est identique au bureau'],c:1,expl:'L\'argument avancé porte sur les avantages productifs du télétravail.',audio:'Plusieurs études montrent que le télétravail améliore la productivité des employés.'},
+    {q:'🎧 Quel registre de langue est utilisé ?',opts:['Familier','Standard','Soutenu','Argotique'],c:2,expl:'Le registre soutenu utilise des tournures complexes et un vocabulaire recherché.',audio:'Il conviendrait d\'examiner la problématique sous un angle différent afin de mieux en saisir les enjeux.'},
   ],
   C1:[
-    // Questions sans audio
-    {q:'"Il m\'a fallu m\'y reprendre à plusieurs fois." — Ce registre est :',opts:['Familier','Courant','Soutenu','Argotique'],c:2,expl:'Cette construction soignée avec infinitif pronominal relève du registre soutenu.',audio:null},
-    {q:'Quel est le sens de "pérégrinations" ?',opts:['Voyages nombreux','Prières répétées','Hésitations','Plaintes'],c:0,expl:'"Pérégrinations" désigne des voyages nombreux et variés.',audio:null},
-    {q:'"Il pleuvait des cordes" est une :',opts:['Métaphore','Métonymie','Litote','Expression idiomatique'],c:3,expl:'"Pleuvoir des cordes" est une expression figée signifiant pleuvoir très fort.',audio:null},
-    // Questions AVEC audio
-    {q:'🎧 Écoutez et identifiez le registre de la conversation.',opts:['Très familier','Courant','Soutenu','Professionnel formel'],c:3,expl:'Le registre professionnel formel : vocabulaire précis, constructions soignées.',audio:'Je vous prie de bien vouloir agréer, Monsieur, l\'expression de mes salutations distinguées.'},
-    {q:'🎧 Écoutez et identifiez la tonalité du discours.',opts:['Ironique','Neutre','Enthousiaste','Menaçante'],c:0,expl:'L\'ironie dit le contraire de ce qu\'on pense, souvent avec un ton particulier.',audio:'Ah oui, quelle excellente idée ! Bravo... C\'est vraiment du grand art !'},
-  ],
-  LECT:[
-    {q:'Lisez : "Bonjour ! Je m\'appelle Ahmed. J\'ai 25 ans. J\'habite à Lyon." — Quel est le prénom de la personne ?',opts:['Mohamed','Ahmed','Ali','Hassan'],c:1,expl:'Le texte dit "Je m\'appelle Ahmed."',audio:null},
-    {q:'Lisez : "Je vais au marché le samedi matin pour acheter des légumes frais." — Quand va-t-elle au marché ?',opts:['Le dimanche soir','Le samedi matin','Le vendredi midi','Tous les jours'],c:1,expl:'Le texte dit "le samedi matin".',audio:null},
-    {q:'Lisez : "Chère Marie, je t\'écris pour te dire que j\'ai trouvé un nouveau travail. Je suis très content !" — Quel est l\'état d\'esprit de l\'auteur ?',opts:['Triste','Inquiet','Content','Surpris'],c:2,expl:'"Je suis très content" exprime une émotion positive.',audio:null},
-    {q:'Lisez : "La réunion a été reportée en raison d\'une grève des transports." — Pourquoi la réunion a-t-elle été reportée ?',opts:['Le lieu était indisponible','Une personne était malade','Grève des transports','Mauvais temps'],c:2,expl:'"En raison de" introduit la cause : la grève des transports.',audio:null},
+    {q:'Quelle figure de style est "Cette obscure clarté" ?',opts:['Métaphore','Hyperbole','Oxymore','Anaphore'],c:2,expl:'Un oxymore associe deux termes contradictoires : "obscure" (sombre) + "clarté" (lumière).',audio:null},
+    {q:'Lequel est un verbe de nuance proche de "prétendre" ?',opts:['Dire','Feindre','Parler','Affirmer'],c:1,expl:'"Feindre" = simuler, faire semblant. Nuance plus forte que "prétendre".',audio:null},
+    {q:'"Il convient de + infinitif" exprime :',opts:['Une obligation forte','Une recommandation formelle','Un souhait','Une interdiction'],c:1,expl:'"Il convient de" est une tournure impersonnelle formelle qui exprime une recommandation.',audio:null},
+    {q:'Quelle est la différence entre "davantage" et "d\'avantage" ?',opts:['Aucune différence','Davantage = plus / D\'avantage = d\'un bénéfice','Davantage est familier','D\'avantage est plus courant'],c:1,expl:'"Davantage" est un adverbe (= plus). "D\'avantage" signifie "d\'un avantage" (nom).',audio:null},
+    {q:'🎧 Quelle stratégie rhétorique est utilisée ?',opts:['L\'analogie','La réfutation','La concession','L\'accumulation'],c:2,expl:'La concession admet un point adverse avant de le contrebalancer.',audio:'Certes, cette politique présente des risques. Néanmoins, ses bénéfices à long terme ne sont pas négligeables.'},
+    {q:'🎧 Quel type de discours entendez-vous ?',opts:['Publicitaire','Scientifique','Politique','Judiciaire'],c:2,expl:'Le discours politique emploie des appels à la nation, au collectif et à l\'avenir.',audio:'Mes chers compatriotes, notre nation doit faire face aux défis du siècle avec courage et détermination.'},
   ],
   C2:[
-    // Questions sans audio
-    {q:'"L\'art pour l\'art" est associé au mouvement :',opts:['Réalisme','Naturalisme','Parnasse','Surréalisme'],c:2,expl:'Le Parnasse (XIXe) prônait la beauté formelle et l\'art dégagé de toute utilité sociale.',audio:null},
-    {q:'Quel auteur a écrit "Madame Bovary" ?',opts:['Zola','Flaubert','Hugo','Stendhal'],c:1,expl:'Gustave Flaubert publia Madame Bovary en 1857, chef-d\'œuvre du réalisme.',audio:null},
-    {q:'Le pléonasme est une répétition :',opts:['Recherchée et stylistique','Inutile et redondante','Musicale et rythmique','Ironique et volontaire'],c:1,expl:'Le pléonasme (ex : "monter en haut") est une répétition inutile du sens.',audio:null},
-    // Questions AVEC audio
-    {q:'🎧 Écoutez et identifiez la technique rhétorique.',opts:['Anaphore','Épiphore','Chiasme','Gradation'],c:0,expl:'L\'anaphore consiste à répéter le même mot ou groupe en début de phrase.',audio:'Je rêve d\'un monde de paix. Je rêve d\'un monde sans frontières. Je rêve d\'un avenir meilleur.'},
-    {q:'🎧 Écoutez et identifiez le procédé stylistique.',opts:['Oxymore','Antithèse','Métaphore filée','Chiasme'],c:3,expl:'Le chiasme inverse la structure : A B / B A. Ex : "Il faut manger pour vivre et non vivre pour manger."',audio:'Il faut manger pour vivre, et non vivre pour manger. Telle est la sagesse.'},
-  ]
+    {q:'"L\'art pour l\'art" est associé au mouvement littéraire :',opts:['Réalisme','Naturalisme','Parnasse','Surréalisme'],c:2,expl:'Le Parnasse (XIXe) prônait la beauté formelle et l\'art dégagé de toute utilité sociale.',audio:null},
+    {q:'Qu\'est-ce qu\'un "zeugme" ?',opts:['Une répétition rythmique','Une figure reliant grammaticalement deux éléments incompatibles','Un synonyme d\'oxymore','Une métaphore filée'],c:1,expl:'Exemple de zeugme : "Elle portait une robe rouge et beaucoup d\'arrogance".',audio:null},
+    {q:'Quelle est la valeur du subjonctif imparfait dans "Bien qu\'il fût absent" ?',opts:['Irréel du présent','Concordance des temps en registre soutenu','Hypothèse future','Habitude passée'],c:1,expl:'Le subjonctif imparfait est la forme soutenue/littéraire du subjonctif présent dans les textes classiques.',audio:null},
+    {q:'🎧 Identifiez la figure de style.',opts:['Litote','Métonymie','Chiasme','Euphémisme'],c:2,expl:'Le chiasme inverse la structure : A-B / B-A.',audio:'Il faut manger pour vivre et non pas vivre pour manger.'},
+    {q:'🎧 Quel registre littéraire ?',opts:['Épique','Lyrique','Tragique','Comique'],c:1,expl:'Le registre lyrique exprime les sentiments intimes du poète.',audio:'Ô temps ! suspends ton vol, et vous, heures propices, suspendez votre cours !'},
+  ],
+  LECT:[
+    {q:'Lisez : "Bonjour ! Je m\'appelle Ahmed. J\'ai 25 ans." — Quel est son prénom ?',opts:['Mohamed','Ahmed','Ali','Hassan'],c:1,expl:'Le texte dit "Je m\'appelle Ahmed".',audio:null},
+    {q:'Lisez : "Je vais au marché le samedi matin." — Quand ?',opts:['Dimanche soir','Samedi matin','Vendredi midi','Tous les jours'],c:1,expl:'Le texte dit "le samedi matin".',audio:null},
+    {q:'Lisez : "Je suis très content d\'avoir trouvé un nouveau travail !" — Quel état d\'esprit ?',opts:['Triste','Inquiet','Content','Surpris'],c:2,expl:'"Je suis très content" exprime une émotion positive.',audio:null},
+    {q:'Lisez : "La réunion a été reportée en raison d\'une grève." — Pourquoi ?',opts:['Lieu indisponible','Personne malade','Grève','Mauvais temps'],c:2,expl:'"En raison de" introduit la cause.',audio:null},
+    {q:'Lisez : "Elle travaille 35 heures par semaine depuis 2019." — Depuis quand ?',opts:['2017','2018','2019','2020'],c:2,expl:'Le texte mentionne "depuis 2019".',audio:null},
+  ],
 };
 
 // ============================================================
@@ -1790,10 +1794,48 @@ const MEM_DB = {
   ],
 };
 
-const DRAG_DB = [{
-  title:'Catégorisez les mots',cats:['Nourriture 🍽️','Transport 🚗','Nature 🌿'],
-  items:[{w:'Pain',cat:'Nourriture 🍽️'},{w:'Pomme',cat:'Nourriture 🍽️'},{w:'Train',cat:'Transport 🚗'},{w:'Vélo',cat:'Transport 🚗'},{w:'Arbre',cat:'Nature 🌿'},{w:'Fleur',cat:'Nature 🌿'}]
-}];
+const DRAG_DB = {
+  A1:[
+    {title:'Classez les mots par catégorie',cats:['Nourriture 🍽️','Transport 🚗','Nature 🌿'],
+     items:[{w:'Pain',cat:'Nourriture 🍽️'},{w:'Pomme',cat:'Nourriture 🍽️'},{w:'Fromage',cat:'Nourriture 🍽️'},
+            {w:'Train',cat:'Transport 🚗'},{w:'Vélo',cat:'Transport 🚗'},
+            {w:'Arbre',cat:'Nature 🌿'},{w:'Fleur',cat:'Nature 🌿'}]},
+    {title:'Corps humain ou vêtements ?',cats:['Corps 🧍','Vêtements 👕'],
+     items:[{w:'Tête',cat:'Corps 🧍'},{w:'Main',cat:'Corps 🧍'},{w:'Pied',cat:'Corps 🧍'},
+            {w:'Manteau',cat:'Vêtements 👕'},{w:'Pantalon',cat:'Vêtements 👕'},{w:'Robe',cat:'Vêtements 👕'}]},
+  ],
+  A2:[
+    {title:'Loisirs ou travail ?',cats:['Loisirs 🎮','Travail 💼'],
+     items:[{w:'Réunion',cat:'Travail 💼'},{w:'Rapport',cat:'Travail 💼'},{w:'Bureau',cat:'Travail 💼'},
+            {w:'Cinéma',cat:'Loisirs 🎮'},{w:'Lecture',cat:'Loisirs 🎮'},{w:'Musique',cat:'Loisirs 🎮'}]},
+    {title:'Famille ou amis ?',cats:['Famille 👨‍👩‍👧','Amis 👫'],
+     items:[{w:'Cousin',cat:'Famille 👨‍👩‍👧'},{w:'Oncle',cat:'Famille 👨‍👩‍👧'},{w:'Grand-mère',cat:'Famille 👨‍👩‍👧'},
+            {w:'Collègue',cat:'Amis 👫'},{w:'Camarade',cat:'Amis 👫'},{w:'Voisin',cat:'Amis 👫'}]},
+  ],
+  B1:[
+    {title:'Synonymes de "heureux" ou "triste" ?',cats:['Heureux 😊','Triste 😢'],
+     items:[{w:'Ravi',cat:'Heureux 😊'},{w:'Épanoui',cat:'Heureux 😊'},{w:'Comblé',cat:'Heureux 😊'},
+            {w:'Abattu',cat:'Triste 😢'},{w:'Morne',cat:'Triste 😢'},{w:'Chagriné',cat:'Triste 😢'}]},
+    {title:'Passé composé ou imparfait ?',cats:['Passé composé','Imparfait'],
+     items:[{w:'J\'ai mangé',cat:'Passé composé'},{w:'Il est parti',cat:'Passé composé'},{w:'Nous avons vu',cat:'Passé composé'},
+            {w:'Je mangeais',cat:'Imparfait'},{w:'Il partait',cat:'Imparfait'},{w:'Nous voyions',cat:'Imparfait'}]},
+  ],
+  B2:[
+    {title:'Connecteurs : opposition ou conséquence ?',cats:['Opposition','Conséquence'],
+     items:[{w:'Cependant',cat:'Opposition'},{w:'Néanmoins',cat:'Opposition'},{w:'Or',cat:'Opposition'},
+            {w:'Donc',cat:'Conséquence'},{w:'Ainsi',cat:'Conséquence'},{w:'Par conséquent',cat:'Conséquence'}]},
+  ],
+  C1:[
+    {title:'Registre soutenu ou familier ?',cats:['Soutenu 📜','Familier 💬'],
+     items:[{w:'Nonobstant',cat:'Soutenu 📜'},{w:'Susmentionné',cat:'Soutenu 📜'},{w:'Octroyer',cat:'Soutenu 📜'},
+            {w:'Bosser',cat:'Familier 💬'},{w:'Bouquin',cat:'Familier 💬'},{w:'Kiffer',cat:'Familier 💬'}]},
+  ],
+  C2:[
+    {title:'Figure de style : métaphore ou métonymie ?',cats:['Métaphore','Métonymie'],
+     items:[{w:'La vie est un voyage',cat:'Métaphore'},{w:'Cet homme est un lion',cat:'Métaphore'},
+            {w:'Boire un verre',cat:'Métonymie'},{w:'Lire Molière',cat:'Métonymie'},{w:'Paris décide',cat:'Métonymie'}]},
+  ],
+};
 
 const DEMO_STAGS = [
   {id:1,nom:'Bensalem Ahmed',lv:'A2',disp:'Savoirs Essentiels',xp:340,prog:65,miss:12,grp:null,archived:false,remed:'',notes:'Difficultés en compréhension orale.'},
@@ -2592,30 +2634,40 @@ function launchQCM(g,area){
   },1000);
 
   // ── checkQ unique hors de render ──
-  window.checkQ=(btn,idx,correct,expl,optsArr)=>{
+  // checkQText: compare by answer TEXT — immune to option shuffling
+  window.checkQText=(btn,givenText,correctText,expl)=>{
     if(answered)return;
     answered=true;
-    const isOk=idx===correct;
+    const norm=s=>s.replace(/&#39;/g,"'").replace(/&quot;/g,'"').trim().toLowerCase();
+    const isOk=norm(givenText)===norm(correctText);
     document.querySelectorAll('.gp-opt').forEach(b=>{
       b.disabled=true;
-      if(parseInt(b.dataset.idx)===correct)b.classList.add('correct');
+      // Highlight correct answer
+      const bAnswer=norm(b.getAttribute('data-answer')||'');
+      if(bAnswer===norm(correctText))b.classList.add('correct');
     });
     if(!isOk){
       btn.classList.add('wrong');
       const q=qs[cur];
-      errors.push({q:q.q,given:optsArr[idx]||'—',correct:optsArr[correct]||'—',expl:q.expl||''});
+      errors.push({q:q.q,given:norm(givenText),correct:norm(correctText),expl:q.expl||''});
     } else {
       score++;
     }
     const fb=document.getElementById('gfb');
     if(fb){
       fb.className='gp-fb show '+(isOk?'correct':'wrong');
-      fb.innerHTML=(isOk?'✅ Bonne réponse !':'❌ Réponse incorrecte.')+(expl?`<div class="expl">💡 ${expl}</div>`:'');
+      fb.innerHTML=(isOk?'✅ Bonne réponse !':'❌ Réponse incorrecte. La bonne réponse est : <strong>'+correctText.replace(/&#39;/g,"'")+'</strong>')+(expl?`<div class="expl">💡 ${expl.replace(/&#39;/g,"'").replace(/&quot;/g,'"')}</div>`:'');
     }
     const nxt=document.getElementById('gnxt');
     if(nxt)nxt.classList.add('show');
     showMasc(isOk?"Excellent ! Continue ! 🔥":"Ne t'inquiète pas ! Regarde l'explication. 😊",isOk?"léo.png":"lina.png");
     playSound(isOk?'correct':'wrong');
+  };
+  // Keep checkQ for backward compat
+  window.checkQ=(btn,idx,correct,expl,optsArr)=>{
+    const correctText=Array.isArray(optsArr)?optsArr[correct]:'';
+    const givenText=Array.isArray(optsArr)?optsArr[idx]:'';
+    window.checkQText(btn,givenText,correctText,expl);
   };
 
   // ── render une question ──
@@ -2661,15 +2713,18 @@ function launchQCM(g,area){
     if(q.ctx)html+=`<div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">${q.ctx}</div>`;
     html+=`<div class="gp-q">${q.q}</div><div class="gp-opts">`;
 
+    // Correct answer as TEXT to avoid index-shuffle mismatch
+    const correctIdx = q.c !== undefined ? q.c : (q.correct !== undefined ? q.correct : 0);
+    const correctText = (q.opts||[])[correctIdx] || '';
     opts.forEach((item,idx)=>{
       const safeExpl=(q.expl||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-      const safeOpts=JSON.stringify(q.opts||[]);
-      html+=`<button class="gp-opt" data-idx="${item.i}" onclick="checkQ(this,${item.i},${q.c!==undefined?q.c:q.correct},'${safeExpl}',${safeOpts})">${letters[idx]}. ${item.o}</button>`;
+      const safeCorrect=correctText.replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      html+=`<button class="gp-opt" data-answer="${item.o.replace(/"/g,'&quot;').toLowerCase().trim()}" onclick="checkQText(this,'${item.o.replace(/'/g,"&#39;")}','${safeCorrect}','${safeExpl}')">${letters[idx]}. ${item.o}</button>`;
     });
 
     html+=`</div>
     <div class="gp-fb" id="gfb"></div>
-    <button class="gp-next show" id="gnxt" style="display:none">Continuer →</button>
+    <button class="gp-next" id="gnxt" style="display:none">Continuer →</button>
     </div>`;
 
     d.innerHTML=html;
@@ -2706,13 +2761,19 @@ function launchTrous(g,c){
     // Normalize: trim + lowercase for comparison
     const normalize=s=>(s||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
     let ok=0,errors=[];
+    // Vraie normalisation: supprime accents, casse, espaces superflus
+    const normAcc=s=>(s||'').trim().toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g,'')
+      .replace(/\s+/g,' ');
     answers.forEach((ans,i)=>{
       const inp=document.getElementById(`bl-${i}`);
-      // Only check if user typed something new (not auto-filled)
-      const val=inp.value.trim().toLowerCase();
-      const expected=ans.toLowerCase();
-      if(val===expected){inp.classList.add('correct');ok++;}
-      else{inp.classList.add('wrong');errors.push({given:val||'(vide)',correct:ans,expl:qsData[i].expl});inp.placeholder=ans;}
+      const val=inp.value.trim();
+      if(!val){inp.classList.add('wrong');errors.push({given:'(vide)',correct:ans,expl:qsData[i].expl});inp.placeholder=ans;return;}
+      // Accept exact match OR normalized match OR any alternative separated by /
+      const alternatives=ans.split('/').map(a=>normAcc(a.trim()));
+      const isOk=alternatives.includes(normAcc(val));
+      if(isOk){inp.classList.add('correct');ok++;}
+      else{inp.classList.add('wrong');errors.push({given:val,correct:ans,expl:qsData[i].expl});inp.placeholder=ans;}
     });
     let errHtml='';
     if(errors.length>0){errHtml='<div class="res-errors" style="margin-top:10px"><h4>📋 Corrections :</h4>'+errors.slice(0,5).map(e=>`<div class="err-item"><div class="err-given">❌ Votre réponse : "${e.given}"</div><div class="err-correct">✅ Bonne réponse : "${e.correct}"</div><div class="err-expl">💡 ${e.expl}</div></div>`).join('')+'</div>';}
@@ -2782,7 +2843,8 @@ function launchPuzzle(g,c){
 
 // DRAG
 function launchDrag(g,c){
-  const ex=DRAG_DB[0];
+  const dragPool=DRAG_DB[g.lv]||DRAG_DB['A1']||[{title:'Classez',cats:['A','B'],items:[]}];
+  const ex=dragPool[Math.floor(Math.random()*dragPool.length)];
   const d=document.createElement('div');d.className='gc-content';
   d.innerHTML=`<div class="gp"><p style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:14px">${ex.title} — Glissez ou cliquez pour classer :</p><div class="drag-bank" id="dbank">${ex.items.map(item=>`<div class="di" draggable="true" data-word="${item.w}" data-cat="${item.cat}" onclick="clickItem('${item.w.replace(/'/g,"\\'")}','${item.cat.replace(/'/g,"\\'")}',this)">${item.w}</div>`).join('')}</div>${ex.cats.map(cat=>`<span class="dz-lbl">${cat}</span><div class="dz" data-cat="${cat}" id="dz-${cat.replace(/[^a-z0-9]/gi,'_')}"></div>`).join('')}<button class="bsub" style="margin-top:14px" onclick="checkDrag()">Vérifier ✅</button><div id="drag-fb" style="margin-top:10px"></div></div>`;
   c.appendChild(d);
