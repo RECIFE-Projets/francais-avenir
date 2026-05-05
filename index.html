@@ -21,7 +21,7 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);min-height:100vh;}
 .page{display:none;min-height:100vh;}
-.page.active{display:block;}
+.page.active{display:block;position:relative;z-index:1;}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 
 /* NAVBAR */
@@ -441,11 +441,11 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 </div>
 
 <!-- TOAST -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="alert" aria-live="polite"></div>
 
 <!-- GLOSSAIRE -->
 <!-- LOADING SCREEN -->
-<div id="loading-screen" style="position:fixed;inset:0;background:linear-gradient(135deg,#667eea,#2ECC71);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:loaderFadeOut 0.5s ease 2.2s forwards;">
+<div id="loading-screen" style="position:fixed;inset:0;background:linear-gradient(135deg,#667eea,#2ECC71);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;">
   <div style="font-family:'Baloo 2',cursive;font-size:40px;font-weight:800;color:white;margin-bottom:6px">Français<span style="color:#F1C40F">Avenir</span></div>
   <div style="font-size:13px;color:rgba(255,255,255,.8);margin-bottom:28px">Plateforme pédagogique RÉCIFE</div>
   <div style="width:220px;height:6px;background:rgba(255,255,255,.3);border-radius:50px;overflow:hidden">
@@ -455,7 +455,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 </div>
 <style>
 @keyframes loadFill{from{width:0}to{width:100%}}
-@keyframes loaderFadeOut{0%{opacity:1;pointer-events:auto}99%{opacity:0;pointer-events:none}100%{opacity:0;display:none;pointer-events:none;visibility:hidden}}
 </style>
 
 <!-- LEVEL UP OVERLAY -->
@@ -490,7 +489,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 </div>
 
 <!-- ===== PAGE ACCUEIL ===== -->
-<div class="page active" id="page-home">
+<div class="page" id="page-home">
   <nav class="navbar">
     <div class="nav-logo">Français<span>Avenir</span></div>
     <div style="display:flex;gap:10px;align-items:center">
@@ -1754,12 +1753,18 @@ const PUZZLE_DB = {
     {words:['Non','seulement','il','a','réussi',',','mais','il','a','également','aidé','ses','collègues.'],correct:"Non seulement il a réussi, mais il a également aidé ses collègues."},
   ],
   C1:[
-    {words:['Il','convient','de','nuancer','ce','propos','en','tenant','compte','du','contexte','historique.'],correct:"Il convient de nuancer ce propos en tenant compte du contexte historique."},
-    {words:['La','démarche','épistémologique','adoptée','influe','sur','la','validité','des','conclusions.'],correct:"La démarche épistémologique adoptée influe sur la validité des conclusions."},
+    {words:['Il','convient','de','nuancer','ce','propos','avec','rigueur.'],correct:'Il convient de nuancer ce propos avec rigueur.'},
+    {words:['La','situation','est','plus','complexe','que','prévu.'],correct:'La situation est plus complexe que prévu.'},
+    {words:['Pour','autant','que','je','sache,','cette','hypothèse','est','fondée.'],correct:'Pour autant que je sache, cette hypothèse est fondée.'},
+    {words:['Nonobstant','ces','difficultés,','le','projet','a','abouti.'],correct:'Nonobstant ces difficultés, le projet a abouti.'},
+    {words:['Il','faut','que','vous','preniez','en','compte','cette','dimension.'],correct:'Il faut que vous preniez en compte cette dimension.'},
+    {words:['Cette','question','mérite','une','analyse','approfondie.'],correct:'Cette question mérite une analyse approfondie.'},
   ],
   C2:[
-    {words:['Fût-il','le','dernier','des','mortels',',','il','n\'eût','point','renoncé','à','ses','convictions.'],correct:"Fût-il le dernier des mortels, il n'eût point renoncé à ses convictions."},
-    {words:['L\'oxymore','associe','deux','termes','antithétiques','pour','créer','une','image','saisissante.'],correct:"L'oxymore associe deux termes antithétiques pour créer une image saisissante."},
+    {words:['Il','faut','manger','pour','vivre','et','non','vivre','pour','manger.'],correct:'Il faut manger pour vivre et non vivre pour manger.'},
+    {words:["L'oxymore",'associe','deux','termes','contradictoires','pour','créer','un','effet.'],correct:"L'oxymore associe deux termes contradictoires pour créer un effet."},
+    {words:['La','prétérition','affirme','en','feignant','de','ne','pas','dire.'],correct:'La prétérition affirme en feignant de ne pas dire.'},
+    {words:['Le','chiasme','repose','sur','une','inversion','croisée','des','termes.'],correct:'Le chiasme repose sur une inversion croisée des termes.'},
   ],
 };
 
@@ -1796,44 +1801,38 @@ const MEM_DB = {
 
 const DRAG_DB = {
   A1:[
-    {title:'Classez les mots par catégorie',cats:['Nourriture 🍽️','Transport 🚗','Nature 🌿'],
-     items:[{w:'Pain',cat:'Nourriture 🍽️'},{w:'Pomme',cat:'Nourriture 🍽️'},{w:'Fromage',cat:'Nourriture 🍽️'},
-            {w:'Train',cat:'Transport 🚗'},{w:'Vélo',cat:'Transport 🚗'},
-            {w:'Arbre',cat:'Nature 🌿'},{w:'Fleur',cat:'Nature 🌿'}]},
+    {title:'Catégorisez les mots',cats:['Nourriture 🍽️','Transport 🚗','Nature 🌿'],
+     items:[{w:'Pain',cat:'Nourriture 🍽️'},{w:'Pomme',cat:'Nourriture 🍽️'},{w:'Fromage',cat:'Nourriture 🍽️'},{w:'Train',cat:'Transport 🚗'},{w:'Vélo',cat:'Transport 🚗'},{w:'Arbre',cat:'Nature 🌿'},{w:'Fleur',cat:'Nature 🌿'}]},
     {title:'Corps humain ou vêtements ?',cats:['Corps 🧍','Vêtements 👕'],
-     items:[{w:'Tête',cat:'Corps 🧍'},{w:'Main',cat:'Corps 🧍'},{w:'Pied',cat:'Corps 🧍'},
-            {w:'Manteau',cat:'Vêtements 👕'},{w:'Pantalon',cat:'Vêtements 👕'},{w:'Robe',cat:'Vêtements 👕'}]},
+     items:[{w:'Tête',cat:'Corps 🧍'},{w:'Main',cat:'Corps 🧍'},{w:'Pied',cat:'Corps 🧍'},{w:'Manteau',cat:'Vêtements 👕'},{w:'Pantalon',cat:'Vêtements 👕'},{w:'Robe',cat:'Vêtements 👕'}]},
   ],
   A2:[
     {title:'Loisirs ou travail ?',cats:['Loisirs 🎮','Travail 💼'],
-     items:[{w:'Réunion',cat:'Travail 💼'},{w:'Rapport',cat:'Travail 💼'},{w:'Bureau',cat:'Travail 💼'},
-            {w:'Cinéma',cat:'Loisirs 🎮'},{w:'Lecture',cat:'Loisirs 🎮'},{w:'Musique',cat:'Loisirs 🎮'}]},
-    {title:'Famille ou amis ?',cats:['Famille 👨‍👩‍👧','Amis 👫'],
-     items:[{w:'Cousin',cat:'Famille 👨‍👩‍👧'},{w:'Oncle',cat:'Famille 👨‍👩‍👧'},{w:'Grand-mère',cat:'Famille 👨‍👩‍👧'},
-            {w:'Collègue',cat:'Amis 👫'},{w:'Camarade',cat:'Amis 👫'},{w:'Voisin',cat:'Amis 👫'}]},
+     items:[{w:'Réunion',cat:'Travail 💼'},{w:'Rapport',cat:'Travail 💼'},{w:'Bureau',cat:'Travail 💼'},{w:'Cinéma',cat:'Loisirs 🎮'},{w:'Lecture',cat:'Loisirs 🎮'},{w:'Musique',cat:'Loisirs 🎮'}]},
+    {title:'Famille ou amis ?',cats:['Famille 👨‍👩‍👧','Relations 👫'],
+     items:[{w:'Cousin',cat:'Famille 👨‍👩‍👧'},{w:'Oncle',cat:'Famille 👨‍👩‍👧'},{w:'Grand-mère',cat:'Famille 👨‍👩‍👧'},{w:'Collègue',cat:'Relations 👫'},{w:'Voisin',cat:'Relations 👫'},{w:'Camarade',cat:'Relations 👫'}]},
   ],
   B1:[
-    {title:'Synonymes de "heureux" ou "triste" ?',cats:['Heureux 😊','Triste 😢'],
-     items:[{w:'Ravi',cat:'Heureux 😊'},{w:'Épanoui',cat:'Heureux 😊'},{w:'Comblé',cat:'Heureux 😊'},
-            {w:'Abattu',cat:'Triste 😢'},{w:'Morne',cat:'Triste 😢'},{w:'Chagriné',cat:'Triste 😢'}]},
+    {title:'Synonymes de heureux ou triste ?',cats:['Heureux 😊','Triste 😢'],
+     items:[{w:'Ravi',cat:'Heureux 😊'},{w:'Épanoui',cat:'Heureux 😊'},{w:'Comblé',cat:'Heureux 😊'},{w:'Abattu',cat:'Triste 😢'},{w:'Morne',cat:'Triste 😢'},{w:'Chagriné',cat:'Triste 😢'}]},
     {title:'Passé composé ou imparfait ?',cats:['Passé composé','Imparfait'],
-     items:[{w:'J\'ai mangé',cat:'Passé composé'},{w:'Il est parti',cat:'Passé composé'},{w:'Nous avons vu',cat:'Passé composé'},
-            {w:'Je mangeais',cat:'Imparfait'},{w:'Il partait',cat:'Imparfait'},{w:'Nous voyions',cat:'Imparfait'}]},
+     items:[{w:"J'ai mangé",cat:'Passé composé'},{w:'Il est parti',cat:'Passé composé'},{w:'Nous avons vu',cat:'Passé composé'},{w:'Je mangeais',cat:'Imparfait'},{w:'Il partait',cat:'Imparfait'},{w:'Nous voyions',cat:'Imparfait'}]},
   ],
   B2:[
     {title:'Connecteurs : opposition ou conséquence ?',cats:['Opposition','Conséquence'],
-     items:[{w:'Cependant',cat:'Opposition'},{w:'Néanmoins',cat:'Opposition'},{w:'Or',cat:'Opposition'},
-            {w:'Donc',cat:'Conséquence'},{w:'Ainsi',cat:'Conséquence'},{w:'Par conséquent',cat:'Conséquence'}]},
+     items:[{w:'Cependant',cat:'Opposition'},{w:'Néanmoins',cat:'Opposition'},{w:'Or',cat:'Opposition'},{w:'Donc',cat:'Conséquence'},{w:'Ainsi',cat:'Conséquence'},{w:'Par conséquent',cat:'Conséquence'}]},
+    {title:'Concession ou cause ?',cats:['Concession','Cause'],
+     items:[{w:'Bien que',cat:'Concession'},{w:'Quoique',cat:'Concession'},{w:'Malgré',cat:'Concession'},{w:'Car',cat:'Cause'},{w:'Puisque',cat:'Cause'},{w:'Étant donné que',cat:'Cause'}]},
   ],
   C1:[
     {title:'Registre soutenu ou familier ?',cats:['Soutenu 📜','Familier 💬'],
-     items:[{w:'Nonobstant',cat:'Soutenu 📜'},{w:'Susmentionné',cat:'Soutenu 📜'},{w:'Octroyer',cat:'Soutenu 📜'},
-            {w:'Bosser',cat:'Familier 💬'},{w:'Bouquin',cat:'Familier 💬'},{w:'Kiffer',cat:'Familier 💬'}]},
+     items:[{w:'Nonobstant',cat:'Soutenu 📜'},{w:'Susmentionné',cat:'Soutenu 📜'},{w:'Octroyer',cat:'Soutenu 📜'},{w:'Bosser',cat:'Familier 💬'},{w:'Bouquin',cat:'Familier 💬'},{w:'Kiffer',cat:'Familier 💬'}]},
   ],
   C2:[
-    {title:'Figure de style : métaphore ou métonymie ?',cats:['Métaphore','Métonymie'],
-     items:[{w:'La vie est un voyage',cat:'Métaphore'},{w:'Cet homme est un lion',cat:'Métaphore'},
-            {w:'Boire un verre',cat:'Métonymie'},{w:'Lire Molière',cat:'Métonymie'},{w:'Paris décide',cat:'Métonymie'}]},
+    {title:'Tropes ou figures de construction ?',cats:['Trope (sens)','Construction (forme)'],
+     items:[{w:'Métaphore',cat:'Trope (sens)'},{w:'Métonymie',cat:'Trope (sens)'},{w:'Synecdoque',cat:'Trope (sens)'},{w:'Chiasme',cat:'Construction (forme)'},{w:'Anaphore',cat:'Construction (forme)'},{w:'Zeugme',cat:'Construction (forme)'}]},
+    {title:'XVIIe ou XIXe siècle ?',cats:['XVIIe siècle','XIXe siècle'],
+     items:[{w:'Molière',cat:'XVIIe siècle'},{w:'Racine',cat:'XVIIe siècle'},{w:'Corneille',cat:'XVIIe siècle'},{w:'Balzac',cat:'XIXe siècle'},{w:'Flaubert',cat:'XIXe siècle'},{w:'Zola',cat:'XIXe siècle'}]},
   ],
 };
 
@@ -2496,6 +2495,9 @@ function updDash(){
     ra.innerHTML=`<p style="text-align:center;color:var(--muted);font-size:13px;padding:12px">Aucune activité pour l'instant. Lance-toi dans un jeu !</p>`;
   }
   updMasc();
+  if(!window._autoSaveTimer){
+    window._autoSaveTimer=setInterval(()=>{if(S.user)saveUserData();},5*60*1000);
+  }
 }
 function updMasc(){
   const msg=S.xp>200?'Super travail ! Continue ! 🔥':'Allez, joue un jeu pour gagner des XP ! 💪';
@@ -2691,6 +2693,12 @@ function launchQCM(g,area){
 
     let html='<div class="gp">';
     // Header avec progress et timer
+    // Clear pedagogical instruction on first question
+    if(cur===0){
+      html+=`<div style="background:var(--blue-l);border-radius:var(--rs);padding:10px 14px;margin-bottom:10px;font-size:12px;font-weight:600;color:var(--blue-d)">
+        💡 <strong>Consigne :</strong> Lisez la question et choisissez la bonne réponse.${g.type==='Audio'?' <strong>Cliquez sur ▶️</strong> pour écouter avant de répondre.':''}
+      </div>`;
+    }
     html+=`<div class="gp-hdr">
       <button style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted)" onclick="clearInterval(window._gameTimer);showTab('t-games');goTo('page-dash')">✕</button>
       <div class="gp-prog"><div class="gp-fill" style="width:${cur/qs.length*100}%"></div></div>
@@ -2752,7 +2760,11 @@ function launchTrous(g,c){
   const d=document.createElement('div');d.className='gc-content';
   // Prevent auto-fill correction
   const qsData=qs.map((q,i)=>({...q,userAnswer:'',idx:i}));
-  d.innerHTML=`<div class="gp"><p style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:14px">Complétez les phrases avec les formes correctes :</p>${qsData.map((q,i)=>`<div style="margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--border)"><div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:6px">${q.ctx}</div><div class="blank-text">${q.text.replace('_____',`<input type="text" class="blank-inp" id="bl-${i}" placeholder="..." autocomplete="off" autocorrect="off" spellcheck="false" oninput="this.dataset.changed='1'">`)}</div></div>`).join('')}<button class="bsub" onclick="checkTrous(${JSON.stringify(qsData.map(q=>q.blank)).replace(/"/g,"'")})">Vérifier ✅</button><div id="trous-fb" style="margin-top:14px"></div></div>`;
+  d.innerHTML=`<div class="gp">
+      <div style="background:var(--blue-l);border-radius:var(--rs);padding:10px 14px;margin-bottom:12px;font-size:12px;font-weight:600;color:var(--blue-d)">
+        💡 <strong>Consigne :</strong> Lisez chaque phrase. Tapez le mot manquant dans le champ <strong>_____</strong>. Respectez l'orthographe.
+      </div>
+      <p style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:14px">Complétez les phrases :</p>${qsData.map((q,i)=>`<div style="margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--border)"><div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:6px">${q.ctx}</div><div class="blank-text">${q.text.replace('_____',`<input type="text" class="blank-inp" id="bl-${i}" placeholder="..." autocomplete="off" autocorrect="off" spellcheck="false" oninput="this.dataset.changed='1'">`)}</div></div>`).join('')}<button class="bsub" onclick="checkTrous(${JSON.stringify(qsData.map(q=>q.blank)).replace(/"/g,"'")})">Vérifier ✅</button><div id="trous-fb" style="margin-top:14px"></div></div>`;
   c.appendChild(d);
   window.checkTrous=(answers)=>{
     const inputs=Array.from(document.querySelectorAll('.blank-inp'));
@@ -2791,7 +2803,11 @@ function launchMem(g,c){
   const cards=[...pairs.map(p=>({id:p.word,disp:p.word,type:'word'})),...pairs.map(p=>({id:p.word,disp:p.emoji,type:'emoji'}))].sort(()=>Math.random()-.5);
   let flipped=[],matched=[],moves=0;
   const d=document.createElement('div');d.className='gc-content';
-  d.innerHTML=`<div class="gp"><div style="display:flex;justify-content:space-between;margin-bottom:14px"><span style="font-weight:700;font-size:13px;color:var(--muted)">Paires : <span id="mpairs">0</span>/${pairs.length}</span><span style="font-weight:700;font-size:13px;color:var(--muted)">Tentatives : <span id="mmoves">0</span></span></div><div class="mem-grid">${cards.map((_,i)=>`<div class="mem-card fd" id="mc${i}" onclick="flipMem(${i})"></div>`).join('')}</div></div>`;
+  d.innerHTML=`<div class="gp">
+      <div style="background:var(--blue-l);border-radius:var(--rs);padding:10px 14px;margin-bottom:12px;font-size:12px;font-weight:600;color:var(--blue-d)">
+        💡 <strong>Consigne :</strong> Retournez deux cartes. Si elles forment une paire, elles restent visibles. Trouvez toutes les paires !
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:14px"><span style="font-weight:700;font-size:13px;color:var(--muted)">Paires : <span id="mpairs">0</span>/${pairs.length}</span><span style="font-weight:700;font-size:13px;color:var(--muted)">Tentatives : <span id="mmoves">0</span></span></div><div class="mem-grid">${cards.map((_,i)=>`<div class="mem-card fd" id="mc${i}" onclick="flipMem(${i})"></div>`).join('')}</div></div>`;
   c.appendChild(d);
   window._memCards=cards;
   window.flipMem=i=>{
@@ -2833,8 +2849,9 @@ function launchPuzzle(g,c){
   window.addPuzWord=w=>{selected.push(w);render();};
   window.removePuzWord=i=>{selected.splice(i,1);render();};
   window.checkPuz=correct=>{
+    const normStr=s=>(s||'').trim().replace(/ +/g,' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[.,!?;:'"]/g,'');
     const attempt=selected.join(' ');
-    const ok=attempt===correct;
+    const ok=normStr(attempt)===normStr(correct);
     document.getElementById('puz-fb').innerHTML=`<div class="gp-fb show ${ok?'correct':'wrong'}">${ok?'✅ Parfait ! La phrase est correcte !':'❌ Pas tout à fait...'}<div class="expl">💡 Réponse correcte : ${correct}</div></div>`;
     if(ok)setTimeout(()=>showRes(1,1,g.xp,[],g.id,g.title),1400);
   };
@@ -2961,9 +2978,9 @@ function showRes(score,total,xpGain,errors,gameId,gameTitle){
         </div>
         ${errHtml}
         ${recHtml}
-        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-          <button class="bsub" style="flex:1" onclick="closeModal('m-result');clearInterval(window._gameTimer);showTab('t-games');goTo('page-dash')">← Retour aux jeux</button>
-          <button class="bsub blue" style="flex:1" onclick="closeModal('m-result');launchGame('${gameId||''}')">🔄 Rejouer</button>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          <button class="bsub" style="flex:1;background:var(--muted);font-size:13px" onclick="closeModal('m-result');clearInterval(window._gameTimer);showTab('t-games');goTo('page-dash')">← Retour</button>
+          ${pct<70?`<button class="bsub" style="flex:2;background:var(--orange);font-size:13px" onclick="closeModal('m-result');launchGame('${gameId||''}')">🔄 Réessayer (recommandé)</button>`:`<button class="bsub blue" style="flex:2;font-size:13px" onclick="closeModal('m-result');launchGame('${gameId||''}')">🔄 Rejouer</button>`}
         </div>
       </div>`;
   }
@@ -3923,30 +3940,68 @@ renderGl();
 toggleFgField();
 renderGameFields();
 
-// Écran de chargement — sécurité JS
-setTimeout(()=>{
-  const ls=document.getElementById('loading-screen');
-  if(ls)ls.style.display='none';
-},3000);
-
-// ── Restaurer la session après F5 ──
-(function restoreSession(){
+// ── Initialisation principale après chargement ──
+function initApp(){
+  // 1. Restaurer la session si disponible
+  let sessionRestored=false;
   try{
     const lastEmail=localStorage.getItem('fa_last_email');
-    if(!lastEmail)return;
-    if(loadUserData(lastEmail)){
-      // Session restaurée — aller directement au bon espace
+    if(lastEmail&&loadUserData(lastEmail)){
       if(S.user&&S.user.type==='formateur'){
         goTo('page-form');showFTab('f-stag');
+        sessionRestored=true;
       } else if(S.user){
         updSidebar();updDash();goTo('page-dash');showTab('t-dash');
+        sessionRestored=true;
       }
     }
   }catch(e){}
-})();
 
-// Charger la langue sauvegardée
-try{const l=localStorage.getItem('fa_lang');if(l)setLang(l);}catch(e){}
+  if(!sessionRestored){
+    // S'assurer que la page d'accueil est visible et active
+    goTo('page-home');
+  }
+
+  // 2. Charger la langue sauvegardée
+  try{const l=localStorage.getItem('fa_lang');if(l)setLang(l);}catch(e){}
+}
+
+// ── Masquage de l'écran de chargement ──
+function hideLoadingScreen(){
+  const ls=document.getElementById('loading-screen');
+  if(!ls||ls.dataset.hidden)return;
+  ls.dataset.hidden='1';
+  // Transition douce
+  ls.style.transition='opacity 0.4s ease';
+  ls.style.opacity='0';
+  setTimeout(()=>{
+    ls.style.display='none'; // Retrait complet — plus aucun blocage possible
+    initApp();
+  },420);
+}
+
+// Déclencher après 1.9s (durée de la barre) — priorité absolue
+const _loadTimer=setTimeout(hideLoadingScreen,1900);
+
+// Ou dès que la page est chargée si c'est plus rapide
+if(document.readyState==='complete'){
+  clearTimeout(_loadTimer);
+  setTimeout(hideLoadingScreen,300);
+} else {
+  window.addEventListener('load',()=>{
+    clearTimeout(_loadTimer);
+    setTimeout(hideLoadingScreen,200);
+  },{once:true});
+}
+
+// Failsafe absolu : 5 secondes max quoi qu'il arrive
+setTimeout(()=>{
+  const ls=document.getElementById('loading-screen');
+  if(ls&&ls.style.display!=='none'){
+    ls.style.display='none';
+    initApp();
+  }
+},5000);
 
 
 // Check URL params for session joining
