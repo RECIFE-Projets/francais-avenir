@@ -445,7 +445,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 
 <!-- GLOSSAIRE -->
 <!-- LOADING SCREEN -->
-<div id="loading-screen" style="position:fixed;inset:0;background:linear-gradient(135deg,#667eea,#2ECC71);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+<div id="loading-screen">
   <div style="font-family:'Baloo 2',cursive;font-size:40px;font-weight:800;color:white;margin-bottom:6px">Français<span style="color:#F1C40F">Avenir</span></div>
   <div style="font-size:13px;color:rgba(255,255,255,.8);margin-bottom:28px">Plateforme pédagogique RÉCIFE</div>
   <div style="width:220px;height:6px;background:rgba(255,255,255,.3);border-radius:50px;overflow:hidden">
@@ -454,7 +454,24 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
   <div style="margin-top:16px;font-size:12px;color:rgba(255,255,255,.6)">Chargement...</div>
 </div>
 <style>
+/* Écran de chargement — 100% CSS, aucun JS requis */
+#loading-screen{
+  position:fixed;inset:0;
+  background:linear-gradient(135deg,#667eea,#2ECC71);
+  z-index:9999;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  /* Disparaît automatiquement après 2.3s — INDÉPENDANT DU JS */
+  animation:loaderOut 0.5s ease 2.3s forwards;
+  pointer-events:auto;
+}
+/* Après l'animation : invisible ET ne bloque plus les clics */
 @keyframes loadFill{from{width:0}to{width:100%}}
+@keyframes loaderOut{
+  0%  {opacity:1; pointer-events:auto; visibility:visible;}
+  99% {opacity:0; pointer-events:none; visibility:visible;}
+  100%{opacity:0; pointer-events:none; visibility:hidden; display:none;}
+}
 </style>
 
 <!-- LEVEL UP OVERLAY -->
@@ -1439,7 +1456,7 @@ function checkLevelUp(){
       S.badges.push(nextLv);
       showToast('🏆 Badge '+nextLv+' débloqué ! Félicitations !','success');
       showLevelUp(nextLv);
-      if(document.getElementById('t-map')&&document.getElementById('t-map').style.display!=='none')renderMap();
+      if(document.getElementById('t-map')&&document.getElementById('t-map')?.style.display!=='none')renderMap();
     }
   }
 }
@@ -1972,7 +1989,7 @@ function markDailyDone(gameId){
         showToast('🎉 Défi du jour complété ! +'+ch.xpBonus+' XP bonus !','success');
         launchConfetti(50);playSound('levelup');
       }
-      if(document.getElementById('t-defi')&&document.getElementById('t-defi').style.display!=='none')renderDefiDuJour();
+      if(document.getElementById('t-defi')&&document.getElementById('t-defi')?.style.display!=='none')renderDefiDuJour();
     }
   }catch(e){}
 }
@@ -2272,7 +2289,7 @@ function doLogout(){
   showToast('Déconnecté(e). Données sauvegardées. 👋','info');
   setTimeout(()=>goTo('page-home'),600);
 }
-function toggleFgField(){document.getElementById('fg-fform').style.display=document.getElementById('fg-type').value==='stagiaire'?'block':'none';}
+function toggleFgField(){(document.getElementById('fg-fform')||{style:{}}).style.display=document.getElementById('fg-type').value==='stagiaire'?'block':'none';}
 function doForgot(){
   const e=document.getElementById('fg-e').value.trim();
   const code=document.getElementById('fg-code').value.trim().toUpperCase();
@@ -2302,7 +2319,7 @@ function genPw(){const c='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789
 // ============================================================
 let dispSel='essentiels',lvOptSel='test';
 function selDisp(d){dispSel=d;document.getElementById('d-ess').classList.toggle('sel',d==='essentiels');document.getElementById('d-av').classList.toggle('sel',d==='avenir');}
-function selLvOpt(o){lvOptSel=o;document.getElementById('o-test').classList.toggle('sel',o==='test');document.getElementById('o-know').classList.toggle('sel',o==='know');document.getElementById('lv-choice').style.display=o==='know'?'block':'none';}
+function selLvOpt(o){lvOptSel=o;document.getElementById('o-test').classList.toggle('sel',o==='test');document.getElementById('o-know').classList.toggle('sel',o==='know');const _lvc=document.getElementById('lv-choice');if(_lvc)_lvc.style.display=o==='know'?'block':'none';}
 function selUserLv(lv){
   S.level=lv;
   // Visual feedback: highlight selected pill
@@ -2315,8 +2332,8 @@ function selUserLv(lv){
 }
 function nextSetup(s){
   if(s===2){
-    document.getElementById('setup-s1').style.display='none';
-    document.getElementById('setup-s2').style.display='block';
+    const _ss1=document.getElementById('setup-s1');if(_ss1)_ss1.style.display='none';
+    const _ss2a=document.getElementById('setup-s2');if(_ss2a)_ss2a.style.display='block';
     document.getElementById('ss1').classList.add('done');document.getElementById('ss2').classList.add('active');
     S.dispositif=dispSel==='avenir'?'#AVENIR':'Savoirs Essentiels';
   }
@@ -2327,8 +2344,8 @@ function proceedLv(){
 }
 function finishSetup(lv){
   if(lv)S.level=lv;
-  document.getElementById('setup-s2').style.display='none';
-  document.getElementById('setup-s3').style.display='block';
+  const _ss2b=document.getElementById('setup-s2');if(_ss2b)_ss2b.style.display='none';
+  const _ss3=document.getElementById('setup-s3');if(_ss3)_ss3.style.display='block';
   document.getElementById('ss2').classList.add('done');document.getElementById('ss3').classList.add('active');
   document.getElementById('setup-msg').textContent=`Votre niveau estimé en français est : ${S.level}. Votre aventure commence dans "${LVDATA.find(l=>l.code===S.level)?.name}" !`;
 }
@@ -2468,7 +2485,7 @@ function updSidebar(){
   document.getElementById('sb-xp').textContent=S.xp+' XP';
   const rank=getXpRank(S.xp);
   const prog=getXpProgress(S.xp);
-  document.getElementById('sb-xpf').style.width=prog+'%';
+  const sbxpf=document.getElementById('sb-xpf');if(sbxpf)sbxpf.style.width=prog+'%';
   // Update rank display if exists
   const rankEl=document.getElementById('sb-rank');
   if(rankEl)rankEl.textContent=rank.icon+' '+rank.name;
@@ -3541,7 +3558,7 @@ function lancerDefi(){
   document.getElementById('defi-code').textContent=code;
   document.getElementById('defi-link').textContent=`${window.location.origin}${window.location.pathname}?session=${code}`;
   genQR(code,'defi-qr');
-  document.getElementById('defi-qr-section').style.display='block';
+  const dqrs=document.getElementById('defi-qr-section');if(dqrs)dqrs.style.display='block';
   document.getElementById('defi-live').classList.add('show');
   // Build label including custom games if selected
   let actLabel=`${S.defiTypes.join(', ')} · Niveau(x) ${S.defiNivs.join(', ')}`;
@@ -3574,7 +3591,7 @@ function activerClasse(){
   document.getElementById('classe-code').textContent=code;
   document.getElementById('classe-link').textContent=`${window.location.origin}${window.location.pathname}?classe=${code}`;
   genQR(code,'classe-qr');
-  document.getElementById('classe-qr-zone').style.display='block';
+  const cqrz=document.getElementById('classe-qr-zone');if(cqrz)cqrz.style.display='block';
   // If a custom game is selected, show its name in the confirmation
   let msg=`Mode classe activé ! Code : ${code}.`;
   if(S.classeCustomGameId){
@@ -3940,68 +3957,38 @@ renderGl();
 toggleFgField();
 renderGameFields();
 
-// ── Initialisation principale après chargement ──
+// ── Initialisation — appelée après le chargement ──
+// L'écran de chargement disparaît via CSS (animation 2.3s)
+// Ce code s'exécute EN PARALLÈLE, indépendamment
 function initApp(){
-  // 1. Restaurer la session si disponible
-  let sessionRestored=false;
   try{
     const lastEmail=localStorage.getItem('fa_last_email');
-    if(lastEmail&&loadUserData(lastEmail)){
-      if(S.user&&S.user.type==='formateur'){
-        goTo('page-form');showFTab('f-stag');
-        sessionRestored=true;
-      } else if(S.user){
-        updSidebar();updDash();goTo('page-dash');showTab('t-dash');
-        sessionRestored=true;
+    if(lastEmail&&loadUserData(lastEmail)&&S.user){
+      if(S.user.type==='formateur'){
+        try{goTo('page-form');showFTab('f-stag');}catch(e){}
+      } else {
+        try{updSidebar();}catch(e){}
+        try{updDash();}catch(e){}
+        try{goTo('page-dash');showTab('t-dash');}catch(e){}
       }
+      return;
     }
   }catch(e){}
-
-  if(!sessionRestored){
-    // S'assurer que la page d'accueil est visible et active
-    goTo('page-home');
+  try{goTo('page-home');}catch(e){
+    // Fallback: forcer l'affichage de page-home manuellement
+    const ph=document.getElementById('page-home');
+    if(ph){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));ph.classList.add('active');}
   }
-
-  // 2. Charger la langue sauvegardée
   try{const l=localStorage.getItem('fa_lang');if(l)setLang(l);}catch(e){}
 }
 
-// ── Masquage de l'écran de chargement ──
-function hideLoadingScreen(){
-  const ls=document.getElementById('loading-screen');
-  if(!ls||ls.dataset.hidden)return;
-  ls.dataset.hidden='1';
-  // Transition douce
-  ls.style.transition='opacity 0.4s ease';
-  ls.style.opacity='0';
-  setTimeout(()=>{
-    ls.style.display='none'; // Retrait complet — plus aucun blocage possible
-    initApp();
-  },420);
-}
-
-// Déclencher après 1.9s (durée de la barre) — priorité absolue
-const _loadTimer=setTimeout(hideLoadingScreen,1900);
-
-// Ou dès que la page est chargée si c'est plus rapide
+// Lancer initApp après 2.4s (juste après la fin de l'animation CSS)
+setTimeout(initApp, 2400);
+// Fallback immédiat si la page était déjà chargée
 if(document.readyState==='complete'){
-  clearTimeout(_loadTimer);
-  setTimeout(hideLoadingScreen,300);
-} else {
-  window.addEventListener('load',()=>{
-    clearTimeout(_loadTimer);
-    setTimeout(hideLoadingScreen,200);
-  },{once:true});
+  // L'animation CSS prend 2.3s — ne pas court-circuiter
+  // initApp sera appelée par le setTimeout ci-dessus
 }
-
-// Failsafe absolu : 5 secondes max quoi qu'il arrive
-setTimeout(()=>{
-  const ls=document.getElementById('loading-screen');
-  if(ls&&ls.style.display!=='none'){
-    ls.style.display='none';
-    initApp();
-  }
-},5000);
 
 
 // Check URL params for session joining
