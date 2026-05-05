@@ -846,6 +846,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
       <div class="ni" onclick="showFTab('f-msg')"><span class="ico" id="msg-ico">💬</span>Messagerie</div>
       <div class="ni" onclick="showFTab('f-presence')"><span class="ico">📅</span>Présences</div>
       <div class="ni" onclick="showFTab('f-assign')"><span class="ico">📌</span>Assignations</div>
+      <div class="ni" onclick="showFTab('f-activity');renderActivityLog()"><span class="ico">📋</span>Journal</div>
       <div class="sb-bot"><button class="lgout" onclick="doLogout()">🚪 Déconnexion</button></div>
     </div>
     <div class="mc">
@@ -1091,6 +1092,19 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
             <div class="sh" style="font-size:14px">📋 Assignations actives</div>
             <div id="assign-list"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- JOURNAL D'ACTIVITÉ -->
+      <div id="f-activity" class="tr-panel fade-in">
+        <div class="sh">📋 Journal des activités formateurs</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Historique de toutes les actions : connexions, créations, suppressions et impressions de jeux.</p>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button class="ab bl" style="padding:7px 14px;font-size:12px" onclick="exportActivityCsv()">⬇️ Export CSV</button>
+          <button class="ab rd" style="padding:7px 14px;font-size:12px" onclick="clearActivityLog()">🗑 Effacer le journal</button>
+        </div>
+        <div style="background:var(--white);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);max-height:500px;overflow-y:auto" id="activity-log-list">
+          <p style="text-align:center;color:var(--muted);font-size:12px">Aucune activité enregistrée.</p>
         </div>
       </div>
 
@@ -2183,7 +2197,7 @@ function showFTab(id){
   const el=document.getElementById(id);
   if(el){el.style.display='block';el.classList.add('active','fade-in');}
   document.querySelectorAll('#page-form .ni').forEach(n=>n.classList.remove('active'));
-  const map={'f-stag':0,'f-prog':1,'f-defi':2,'f-classe':3,'f-grp':4,'f-jeux':5,'f-ia':6,'f-attest':7,'f-msg':8,'f-presence':9,'f-assign':10};
+  const map={'f-stag':0,'f-prog':1,'f-defi':2,'f-classe':3,'f-grp':4,'f-jeux':5,'f-ia':6,'f-attest':7,'f-msg':8,'f-presence':9,'f-assign':10,'f-activity':11};
   const items=document.querySelectorAll('#page-form .ni');
   if(map[id]!==undefined&&items[map[id]])items[map[id]].classList.add('active');
   if(id==='f-stag')renderStag();
@@ -2256,6 +2270,7 @@ function doLogin(){
     S.xp=0;S.missions=0;S.badges=['A1'];S.streak=0;S.completedGames={};S.gameHistory=[];
   }
   logPresence();
+  logActivity('login','Connexion formateur','Accès au tableau de bord');
   // Sauvegarder l'email pour restauration de session
   try{localStorage.setItem('fa_last_email',e.toLowerCase());}catch(ex){}
   showToast(`Bienvenue${loaded?' de retour':''}, ${acc.prenom} ! 👋`,'success');
@@ -2592,8 +2607,10 @@ function filterGames(){
     const pct=done?done.pct:null;
     const border=done&&pct>=70?'border-color:var(--green);':'';
     const check=done?`<div style="position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;background:${pct>=70?'var(--green)':'var(--orange)'};color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${pct>=70?'✓':pct+'%'}</div>`:'';
+    // Print button (only visible in formateur mode)
+    const printBtn=S.type==='formateur'?`<button onclick="event.stopPropagation();printExercise('${g.id}')" style="position:absolute;top:8px;left:8px;background:var(--orange);color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Imprimer">🖨</button>`:'';
     return `<div class="gc" onclick="launchGame('${g.id}')" style="position:relative;${border}">
-      ${check}
+      ${check}${printBtn}
       <div class="gc-ico">${g.icon||'🎮'}</div>
       <div class="gc-title">${g.title}</div>
       <div class="gc-desc">${g.desc}</div>
@@ -3751,6 +3768,256 @@ function updAiCorrectInfo(){
   else box.innerHTML=`ℹ️ <strong>${v} bonnes réponses</strong> : QCM à choix multiples — l'apprenant doit sélectionner exactement ${v} réponses correctes parmi les propositions.`;
 }
 
+async 
+
+
+// ── Impression des exercices ──
+function printExercise(gameId){
+  const allG=[...GAMES,...S.customGames];
+  const g=allG.find(x=>x.id===gameId);
+  if(!g){showToast('Jeu introuvable.','error');return;}
+
+  logActivity('print',g.title,'Impression par '+S.user?.prenom);
+
+  let body='';
+  const date=new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+
+  // Header
+  body+=`<div class="header">
+    <div class="logo">RÉCIFE <span>FrançaisAvenir</span></div>
+    <div class="info">Niveau ${g.lv} · ${g.type} · ${date}</div>
+    <h1 class="title">${g.title}</h1>
+    <p class="desc">${g.desc||''}</p>
+  </div>`;
+
+  // Content based on type
+  if(g.type==='QCM'||g.type==='Audio'){
+    const pool=[...(QDB[g.lv]||QDB['A1'])];
+    const qs=g.questions||pool.sort(()=>Math.random()-.5).slice(0,8);
+    qs.forEach((q,i)=>{
+      body+=`<div class="question"><div class="q-num">Question ${i+1}</div>`;
+      if(q.audio){body+=`<div class="audio-note">🎧 Question audio : <em>${q.audio}</em></div>`;}
+      body+=`<div class="q-text">${q.q}</div><div class="options">`;
+      const letters=['A','B','C','D'];
+      (q.opts||[]).forEach((opt,oi)=>{
+        body+=`<div class="opt"><span class="opt-letter">${letters[oi]}</span>${opt}</div>`;
+      });
+      body+=`</div></div>`;
+    });
+    // Answer key
+    body+=`<div class="answer-key"><h3>✅ Corrigé (à ne pas distribuer)</h3>`;
+    qs.forEach((q,i)=>{
+      const c=Array.isArray(q.c)?q.c:[q.c];
+      const letters=['A','B','C','D'];
+      body+=`<div>${i+1}. ${c.map(ci=>letters[ci]).join(', ')} — ${q.expl||''}</div>`;
+    });
+    body+=`</div>`;
+  } else if(g.type==='Trous'){
+    const pool=[...(typeof FILL_DB[g.lv]!=='undefined'?FILL_DB[g.lv]:FILL_DB['A1'])];
+    const qs=g.questions||pool.sort(()=>Math.random()-.5).slice(0,8);
+    qs.forEach((q,i)=>{
+      const display=(q.text||q.q||'').replace('_____','<span class="blank">___________</span>');
+      body+=`<div class="question"><div class="q-num">Exercice ${i+1}</div>`;
+      if(q.ctx)body+=`<div style="font-size:11px;color:#666;margin-bottom:4px;font-style:italic">${q.ctx}</div>`;
+      body+=`<div class="q-text">${display}</div></div>`;
+    });
+    body+=`<div class="answer-key"><h3>✅ Corrigé</h3>`;
+    qs.forEach((q,i)=>{body+=`<div>${i+1}. ${q.blank||q.ans||''} — ${q.expl||''}</div>`;});
+    body+=`</div>`;
+  } else if(g.type==='Puzzle'){
+    const pool=[...(typeof PUZZLE_DB[g.lv]!=='undefined'?PUZZLE_DB[g.lv]:PUZZLE_DB['A1'])];
+    const qs=g.questions||pool.sort(()=>Math.random()-.5).slice(0,6);
+    qs.forEach((q,i)=>{
+      const shuffled=[...(q.words||[])].sort(()=>Math.random()-.5);
+      body+=`<div class="question"><div class="q-num">Exercice ${i+1}</div>
+        <p style="font-size:11px;color:#666">Remettez les mots dans le bon ordre :</p>
+        <div class="words">${shuffled.map(w=>`<span class="word">${w}</span>`).join('')}</div>
+        <div class="answer-line">Réponse : _______________________________________________</div>
+      </div>`;
+    });
+    body+=`<div class="answer-key"><h3>✅ Corrigé</h3>`;
+    qs.forEach((q,i)=>{body+=`<div>${i+1}. ${q.correct||''}</div>`;});
+    body+=`</div>`;
+  } else if(g.type==='Mémoire'){
+    const lvPool=MEM_DB[g.lv]||MEM_DB['A1'];
+    const pairs=lvPool?lvPool[0]:[];
+    body+=`<div class="question"><p>Reliez chaque mot à son image :</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div><h4>Mots</h4>${pairs.map((p,i)=>`<div class="opt">${i+1}. ${p.word}</div>`).join('')}</div>
+        <div><h4>Images / Emojis</h4>${[...pairs].sort(()=>Math.random()-.5).map((p,i)=>`<div class="opt">${String.fromCharCode(65+i)}. ${p.emoji}</div>`).join('')}</div>
+      </div></div>`;
+  } else if(g.type==='Glisser'){
+    const dragPool=DRAG_DB[g.lv]||DRAG_DB['A1'];
+    const ex=dragPool?dragPool[0]:null;
+    if(ex){
+      body+=`<div class="question"><p>${ex.title}</p>
+        <div class="words">${ex.items.map(it=>`<span class="word">${it.w}</span>`).join('')}</div>
+        <div style="display:grid;grid-template-columns:repeat(${ex.cats.length},1fr);gap:12px;margin-top:16px">
+          ${ex.cats.map(cat=>`<div style="border:1.5px solid #ccc;border-radius:8px;padding:10px;min-height:80px">
+            <div style="font-weight:700;font-size:12px;margin-bottom:6px">${cat}</div>
+            <div style="height:60px;border-bottom:1px solid #eee;margin-bottom:4px"></div>
+            <div style="height:60px;border-bottom:1px solid #eee;margin-bottom:4px"></div>
+          </div>`).join('')}
+        </div></div>`;
+    }
+  }
+
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+  <title>${g.title} — RÉCIFE</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:Arial,sans-serif;padding:30px;color:#222;max-width:780px;margin:0 auto;font-size:14px;}
+    .header{border-bottom:3px solid #2ECC71;padding-bottom:14px;margin-bottom:20px;}
+    .logo{font-size:20px;font-weight:900;color:#27AE60;margin-bottom:4px;}
+    .logo span{color:#E67E22;}
+    .info{font-size:11px;color:#777;margin-bottom:4px;}
+    .title{font-size:18px;font-weight:800;margin-bottom:4px;}
+    .desc{font-size:12px;color:#555;font-style:italic;}
+    .question{background:#f9f9f9;border-radius:8px;padding:14px;margin-bottom:14px;border-left:4px solid #2ECC71;}
+    .q-num{font-size:10px;font-weight:700;color:#2ECC71;text-transform:uppercase;margin-bottom:6px;}
+    .q-text{font-size:14px;font-weight:600;margin-bottom:10px;}
+    .options{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+    .opt{display:flex;align-items:center;gap:6px;font-size:13px;padding:4px 0;}
+    .opt-letter{width:20px;height:20px;border:1.5px solid #2ECC71;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#2ECC71;flex-shrink:0;}
+    .blank{display:inline-block;border-bottom:2px solid #333;min-width:80px;margin:0 4px;}
+    .words{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;}
+    .word{border:1.5px solid #2ECC71;border-radius:6px;padding:4px 10px;font-size:13px;font-weight:600;}
+    .answer-line{border-bottom:1px solid #ccc;margin-top:10px;padding-bottom:2px;color:#aaa;font-size:12px;}
+    .audio-note{font-size:11px;color:#3498DB;font-style:italic;margin-bottom:6px;}
+    .answer-key{background:#EAFAF1;border:1.5px solid #2ECC71;border-radius:8px;padding:14px;margin-top:20px;font-size:12px;}
+    .answer-key h3{font-size:13px;font-weight:700;color:#27AE60;margin-bottom:8px;}
+    .answer-key div{padding:3px 0;border-bottom:1px solid rgba(46,204,113,.2);}
+    @media print{.no-print{display:none!important}}
+  </style></head><body>
+  ${body}
+  <div class="no-print" style="margin-top:30px;text-align:center">
+    <button onclick="window.print()" style="padding:10px 24px;background:#2ECC71;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700">🖨️ Imprimer / Enregistrer PDF</button>
+  </div>
+  <div style="margin-top:20px;font-size:10px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:8px">
+    Centre RÉCIFE — FrançaisAvenir · ${g.lv} · Exercice imprimé le ${date}
+  </div>
+  </body></html>`);
+  win.document.close();
+}
+
+function printAllCustomGames(){
+  if(!S.customGames.length){showToast('Aucun jeu personnalisé à imprimer.','warn');return;}
+  // Print each game one by one - open print dialog
+  S.customGames.forEach((g,i)=>{
+    setTimeout(()=>printExercise(g.id),i*300);
+  });
+}
+
+// ── Journal d'activité formateur ──
+const LS_ACTIVITY = 'fa_activity_log';
+
+function logActivity(action, title, detail=''){
+  try{
+    const log = JSON.parse(localStorage.getItem(LS_ACTIVITY)||'[]');
+    log.unshift({
+      action,   // 'create' | 'edit' | 'delete' | 'login'
+      title,
+      detail,
+      author: S.user?.prenom+' '+S.user?.nom || 'Formateur',
+      date: new Date().toLocaleDateString('fr-FR'),
+      time: new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
+    });
+    localStorage.setItem(LS_ACTIVITY, JSON.stringify(log.slice(0,200)));
+  }catch(e){}
+}
+
+function renderActivityLog(){
+  const log = JSON.parse(localStorage.getItem(LS_ACTIVITY)||'[]');
+  const el = document.getElementById('activity-log-list');
+  if(!el) return;
+  if(log.length===0){
+    el.innerHTML='<p style="color:var(--muted);font-size:12px;text-align:center;padding:16px">Aucune activité enregistrée.</p>';
+    return;
+  }
+  const icons={'create':'✅','edit':'✏️','delete':'🗑','login':'🔑','print':'🖨️'};
+  const colors={'create':'var(--green)','edit':'var(--blue)','delete':'var(--red)','login':'var(--purple)','print':'var(--orange)'};
+  el.innerHTML=log.slice(0,50).map(entry=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="width:24px;height:24px;border-radius:50%;background:${colors[entry.action]||'var(--muted)'};color:white;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">${icons[entry.action]||'•'}</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700">${entry.title}</div>
+        <div style="font-size:11px;color:var(--muted)">${entry.detail}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">👤 ${entry.author} · 📅 ${entry.date} à ${entry.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+function clearActivityLog(){
+  if(confirm("Effacer tout le journal d'activité ?")){ 
+    localStorage.removeItem(LS_ACTIVITY);
+    renderActivityLog();
+    showToast('Journal effacé.','info');
+  }
+}
+
+function exportActivityCsv(){
+  const log=JSON.parse(localStorage.getItem(LS_ACTIVITY)||'[]');
+  const rows=['Action,Titre,Détail,Auteur,Date,Heure'];
+  log.forEach(e=>rows.push([e.action,e.title,e.detail,e.author,e.date,e.time].map(v=>'"'+String(v||'').replace(/"/g,"'"  )+'"').join(',')));
+  const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='journal_formateur_recife_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(a.href);
+  showToast('Journal exporté !','success');
+}
+
+// ── Helpers pour l'interface IA ──
+function reindexAiCards(){
+  document.querySelectorAll('[data-qi]').forEach((card,i)=>{
+    card.setAttribute('data-qi',i);
+    // Update question number label
+    const label=card.querySelector('span[style*="background:var(--purple)"]');
+    if(label)label.textContent='Question '+(i+1);
+  });
+}
+
+function addAiOption(qi){
+  const card=document.querySelector(`[data-qi="${qi}"]`);
+  if(!card)return;
+  const opts=card.querySelectorAll('[data-opt]');
+  const newIdx=opts.length;
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;align-items:center;gap:6px;margin-bottom:4px';
+  div.innerHTML=`<input type="radio" name="correct-${qi}" value="${newIdx}" title="Cocher = bonne réponse">
+    <input type="text" class="fi" style="flex:1;font-size:12px;padding:5px 9px" data-opt="${newIdx}" placeholder="Option ${String.fromCharCode(65+newIdx)}">`;
+  // Insert before the + button
+  const addBtn=card.querySelector('button[onclick*="addAiOption"]');
+  if(addBtn)card.insertBefore(div,addBtn);
+}
+
+function collectAiQuestions(){
+  const cards=document.querySelectorAll('[data-qi]');
+  const questions=[];
+  cards.forEach((card,i)=>{
+    const qi=parseInt(card.getAttribute('data-qi'));
+    const qInput=card.querySelector(`#ai-q-${qi}`)||card.querySelectorAll('.fi')[0];
+    const explInput=card.querySelector(`#ai-expl-${qi}`);
+    if(card.querySelector('[data-opt]')){
+      // QCM
+      const opts=[...card.querySelectorAll('[data-opt]')].map(inp=>inp.value.trim()).filter(Boolean);
+      const correctRadio=card.querySelector('input[type=radio]:checked');
+      const correctIdx=correctRadio?parseInt(correctRadio.value):0;
+      questions.push({q:qInput?.value||'',opts,c:correctIdx,expl:explInput?.value||''});
+    } else if(card.querySelector(`#ai-blank-${qi}`)){
+      // Trous
+      const blankInput=card.querySelector(`#ai-blank-${qi}`);
+      questions.push({text:qInput?.value||'',blank:blankInput?.value||'',ctx:'Complétez la phrase.',expl:explInput?.value||''});
+    } else {
+      // Puzzle
+      const correct=qInput?.value||'';
+      const words=correct.split(' ').filter(Boolean);
+      questions.push({words:words.sort(()=>Math.random()-.5),correct});
+    }
+  });
+  return questions;
+}
+
 async function genererIA(){
   const theme=document.getElementById('ai-theme').value.trim();
   const niv=document.getElementById('ai-niv').value;
@@ -3786,21 +4053,70 @@ Réponds UNIQUEMENT avec le JSON valide, sans texte avant ou après, sans balise
     if(parsed&&parsed.questions){
       const res=document.getElementById('ai-result');
       res.classList.add('show');
-      res.innerHTML=`<h4 style="font-family:'Baloo 2',cursive;font-size:15px;font-weight:700;margin-bottom:12px;color:var(--purple-d)">✅ ${parsed.questions.length} questions générées</h4>`;
+      res.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h4 style="font-family:'Baloo 2',cursive;font-size:15px;font-weight:700;color:var(--purple-d)">✅ ${parsed.questions.length} questions générées</h4>
+        <span style="font-size:11px;color:var(--muted)">✏️ Cliquez sur chaque champ pour modifier</span>
+      </div>`;
       parsed.questions.forEach((q,i)=>{
         const card=document.createElement('div');
-        card.style.cssText='border:1.5px solid var(--border);border-radius:var(--rs);padding:12px;margin-bottom:10px;background:var(--bg)';
-        card.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">Question ${i+1}</div><textarea class="ai-q-edit" id="ai-q-${i}">${JSON.stringify(q,null,2)}</textarea>`;
+        card.style.cssText='border:1.5px solid var(--border);border-radius:var(--rs);padding:14px;margin-bottom:10px;background:var(--bg)';
+        // Build editable form based on question type
+        let cardHtml=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;font-weight:700;background:var(--purple);color:white;padding:2px 8px;border-radius:50px">Question ${i+1}</span>
+          <button onclick="this.closest('[data-qi]').remove();reindexAiCards()" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:14px" title="Supprimer">🗑</button>
+        </div>`;
+        card.setAttribute('data-qi', i);
+        if(q.q!==undefined){
+          // QCM
+          const optsHtml=(q.opts||[]).map((o,oi)=>`
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <input type="radio" name="correct-${i}" value="${oi}" ${(Array.isArray(q.c)?q.c.includes(oi):q.c===oi)?'checked':''} title="Cocher = bonne réponse">
+              <input type="text" class="fi" style="flex:1;font-size:12px;padding:5px 9px" value="${o.replace(/"/g,'&quot;')}" data-opt="${oi}" placeholder="Option ${String.fromCharCode(65+oi)}">
+            </div>`).join('');
+          cardHtml+=`
+            <div class="fg"><label class="fl">❓ Question</label><input type="text" class="fi" id="ai-q-${i}" style="font-size:12px" value="${(q.q||'').replace(/"/g,'&quot;')}"></div>
+            <div class="fg"><label class="fl">🔘 Options (cochez la bonne réponse)</label>${optsHtml}</div>
+            <button onclick="addAiOption(${i})" style="font-size:11px;padding:3px 9px;border:1.5px solid var(--blue);color:var(--blue);background:none;border-radius:50px;cursor:pointer;margin-bottom:8px">+ Option</button>
+            <div class="fg"><label class="fl">💡 Explication</label><input type="text" class="fi" id="ai-expl-${i}" style="font-size:12px" value="${(q.expl||'').replace(/"/g,'&quot;')}"></div>`;
+        } else if(q.text!==undefined){
+          // Texte à trous
+          cardHtml+=`
+            <div class="fg"><label class="fl">📝 Phrase (avec _____ pour le trou)</label><input type="text" class="fi" id="ai-q-${i}" style="font-size:12px" value="${(q.text||'').replace(/"/g,'&quot;')}"></div>
+            <div class="fg"><label class="fl">✅ Réponse correcte</label><input type="text" class="fi" id="ai-blank-${i}" style="font-size:12px" value="${(q.blank||'').replace(/"/g,'&quot;')}"></div>
+            <div class="fg"><label class="fl">💡 Explication</label><input type="text" class="fi" id="ai-expl-${i}" style="font-size:12px" value="${(q.expl||'').replace(/"/g,'&quot;')}"></div>`;
+        } else if(q.words!==undefined){
+          // Puzzle
+          cardHtml+=`
+            <div class="fg"><label class="fl">🧩 Phrase correcte</label><input type="text" class="fi" id="ai-q-${i}" style="font-size:12px" value="${(q.correct||'').replace(/"/g,'&quot;')}" placeholder="La phrase dans l'ordre correct"></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Les mots seront mélangés automatiquement pour le jeu.</div>`;
+        }
+        card.innerHTML=cardHtml;
         res.appendChild(card);
       });
+      window._aiParsed=parsed;
+      window._aiType=type;
+      window._aiTheme=theme;
+      window._aiNiv=niv;
       const savebtn=document.createElement('button');
       savebtn.className='bsub';savebtn.style.marginTop='12px';savebtn.textContent='💾 Valider et enregistrer le jeu';
       savebtn.onclick=()=>{
-        let finalQs=[];
-        parsed.questions.forEach((_,i)=>{try{finalQs.push(JSON.parse(document.getElementById(`ai-q-${i}`).value));}catch{}});
+        const finalQs=collectAiQuestions();
+        if(!finalQs.length){showToast('Aucune question à enregistrer.','error');return;}
         const gameType=type==='QCM'?'QCM':type==='Texte à trous'?'Trous':'Puzzle';
-        const game={id:'ai-'+Date.now(),title:`IA – ${theme} (${niv})`,type:gameType,lv:niv,cat:'Vocabulaire',icon:'🤖',desc:`Généré par IA – ${theme} · ${nbCorrect>1?nbCorrect+' bonnes rép.':'1 bonne rép.'}`,xp:30,custom:true,nbCorrect,questions:finalQs};
-        S.customGames.push(game);showToast('Jeu IA enregistré !','success');
+        const game={
+          id:'ai-'+Date.now(),
+          title:`IA – ${theme} (${niv})`,
+          type:gameType,lv:niv,cat:'Vocabulaire',icon:'🤖',
+          desc:`Généré par IA – ${theme}`,xp:30,custom:true,
+          createdBy:S.user?.prenom||'Formateur',
+          createdAt:new Date().toLocaleDateString('fr-FR'),
+          questions:finalQs
+        };
+        S.customGames.push(game);
+        saveCustomGames();
+        logActivity('create',game.title,'Jeu IA créé');
+        showToast('✅ Jeu IA enregistré et partagé avec les stagiaires !','success');
+        renderFJeux();filterGames();
       };
       res.appendChild(savebtn);
     }else{showToast('Erreur de génération IA. Vérifiez votre connexion.','error');}
