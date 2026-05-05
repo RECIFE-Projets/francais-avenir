@@ -468,9 +468,8 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 /* Après l'animation : invisible ET ne bloque plus les clics */
 @keyframes loadFill{from{width:0}to{width:100%}}
 @keyframes loaderOut{
-  0%  {opacity:1; pointer-events:auto; visibility:visible;}
-  99% {opacity:0; pointer-events:none; visibility:visible;}
-  100%{opacity:0; pointer-events:none; visibility:hidden; display:none;}
+  0%  {opacity:1; pointer-events:auto;}
+  100%{opacity:0; pointer-events:none; visibility:hidden;}
 }
 </style>
 
@@ -506,7 +505,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 </div>
 
 <!-- ===== PAGE ACCUEIL ===== -->
-<div class="page" id="page-home">
+<div class="page active" id="page-home">
   <nav class="navbar">
     <div class="nav-logo">Français<span>Avenir</span></div>
     <div style="display:flex;gap:10px;align-items:center">
@@ -2163,7 +2162,15 @@ function goTo(id){
   }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const p=document.getElementById(id);
-  if(p)p.classList.add('active');
+  if(p){
+    p.classList.add('active');
+    window.scrollTo(0,0);
+  } else {
+    // Fallback : afficher page-home si la cible n'existe pas
+    const home=document.getElementById('page-home');
+    if(home)home.classList.add('active');
+    console.warn('goTo: element not found:', id);
+  }
   const showGl=['page-dash','page-form','page-game'].includes(id);
   const showMascot=['page-dash','page-game'].includes(id);
   const glBtn=document.getElementById('gl-btn');
@@ -4018,17 +4025,17 @@ function collectAiQuestions(){
   return questions;
 }
 
-async function genererIA(){
-  const theme=document.getElementById('ai-theme').value.trim();
-  const niv=document.getElementById('ai-niv').value;
-  const type=document.getElementById('ai-type').value;
-  const nb=parseInt(document.getElementById('ai-nb').value)||5;
-  const nbCorrect=parseInt(document.getElementById('ai-nb-correct')?.value)||1;
-  const audio=document.getElementById('ai-audio').value.trim();
-  const video=document.getElementById('ai-video').value.trim();
+function genererIA(){
+  const theme=(document.getElementById('ai-theme')||{value:''}).value.trim();
+  const niv=(document.getElementById('ai-niv')||{value:'A1'}).value;
+  const type=(document.getElementById('ai-type')||{value:'QCM'}).value;
+  const nb=parseInt((document.getElementById('ai-nb')||{value:'5'}).value)||5;
+  const nbCorrect=parseInt((document.getElementById('ai-nb-correct')||{value:'1'}).value)||1;
+  const audio=(document.getElementById('ai-audio')||{value:''}).value.trim();
+  const video=(document.getElementById('ai-video')||{value:''}).value.trim();
   if(!theme){showToast('Saisissez un thème.','error');return;}
   const btn=document.getElementById('ai-btn');
-  btn.disabled=true;btn.textContent='🤖 Génération en cours...';
+  if(btn){btn.disabled=true;btn.textContent='🤖 Génération en cours...';}
   const multiCorrectNote=nbCorrect>1?`IMPORTANT : chaque question QCM doit avoir exactement ${nbCorrect} bonnes réponses (tableau "c" avec ${nbCorrect} indices). Format "c": [0,2] pour les questions à choix multiples.`:'Chaque question a exactement 1 bonne réponse. "c" est un entier (index de la bonne réponse).';
   const prompt=`Tu es un expert en pédagogie FLE (Français Langue Étrangère). Génère ${nb} questions de type "${type}" sur le thème "${theme}" pour le niveau CECRL ${niv}.
 ${multiCorrectNote}
@@ -4043,13 +4050,16 @@ Pour Puzzle de phrases :
 {"questions":[{"words":["mot1","mot2","mot3","mot4"],"correct":"mot1 mot2 mot3 mot4"}]}
 
 Réponds UNIQUEMENT avec le JSON valide, sans texte avant ou après, sans balises markdown. Niveau de langue strictement adapté au CECRL ${niv}. Questions originales, variées, pédagogiquement pertinentes sur le thème "${theme}".`;
-  try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
-    const data=await resp.json();
-    const text=data.content?.map(c=>c.text||'').join('');
-    let parsed;
-    try{parsed=JSON.parse(text.replace(/```json|```/g,'').trim());}
-    catch{parsed=null;}
+  const resetBtn=()=>{if(btn){btn.disabled=false;btn.textContent='🤖 Générer avec l\'IA';}};
+  fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+  }).then(function(resp){return resp.json();})
+  .then(function(data){
+    var text=(data.content||[]).map(function(cc){return cc.text||'';}).join('');
+    var parsed=null;
+    try{parsed=JSON.parse(text.replace(/```json|```/g,'').trim());}catch(e){}
     if(parsed&&parsed.questions){
       const res=document.getElementById('ai-result');
       res.classList.add('show');
@@ -4119,9 +4129,12 @@ Réponds UNIQUEMENT avec le JSON valide, sans texte avant ou après, sans balise
         renderFJeux();filterGames();
       };
       res.appendChild(savebtn);
-    }else{showToast('Erreur de génération IA. Vérifiez votre connexion.','error');}
-  }catch(err){showToast('Erreur IA : '+err.message,'error');}
-  btn.disabled=false;btn.textContent='🤖 Générer avec l\'IA';
+    }else{showToast('Erreur de génération IA. Réessayez ou vérifiez la connexion.','error');}
+    resetBtn();
+  }).catch(function(err){
+    showToast('Erreur IA : '+(err.message||'connexion échouée'),'error');
+    resetBtn();
+  });
 }
 
 // ============================================================
@@ -4277,29 +4290,45 @@ renderGameFields();
 // L'écran de chargement disparaît via CSS (animation 2.3s)
 // Ce code s'exécute EN PARALLÈLE, indépendamment
 function initApp(){
+  // Page d'accueil déjà visible par défaut (class active en HTML)
+  // JS sert uniquement à rediriger si session existante
   try{
     const lastEmail=localStorage.getItem('fa_last_email');
-    if(lastEmail&&loadUserData(lastEmail)&&S.user){
+    if(lastEmail && loadUserData(lastEmail) && S.user){
+      // Session restaurée — aller au bon espace
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
       if(S.user.type==='formateur'){
-        try{goTo('page-form');showFTab('f-stag');}catch(e){}
+        const pf=document.getElementById('page-form');
+        if(pf)pf.classList.add('active');
+        showFTab('f-stag');
       } else {
+        const pd=document.getElementById('page-dash');
+        if(pd)pd.classList.add('active');
         try{updSidebar();}catch(e){}
         try{updDash();}catch(e){}
-        try{goTo('page-dash');showTab('t-dash');}catch(e){}
+        try{showTab('t-dash');}catch(e){}
       }
-      return;
     }
-  }catch(e){}
-  try{goTo('page-home');}catch(e){
-    // Fallback: forcer l'affichage de page-home manuellement
-    const ph=document.getElementById('page-home');
-    if(ph){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));ph.classList.add('active');}
+    // Sinon page-home reste active (déjà définie dans HTML)
+  }catch(e){
+    console.warn('initApp error (non-fatal):', e);
+    // Page d'accueil toujours visible grâce au HTML
   }
   try{const l=localStorage.getItem('fa_lang');if(l)setLang(l);}catch(e){}
 }
 
 // Lancer initApp après 2.4s (juste après la fin de l'animation CSS)
 setTimeout(initApp, 2400);
+
+// Failsafe : si après 3s aucune page n'est active, forcer page-home
+setTimeout(()=>{
+  const anyActive = document.querySelector('.page.active');
+  if(!anyActive){
+    const home = document.getElementById('page-home');
+    if(home) home.classList.add('active');
+    console.warn('Failsafe: forced page-home active');
+  }
+}, 3000);
 // Fallback immédiat si la page était déjà chargée
 if(document.readyState==='complete'){
   // L'animation CSS prend 2.3s — ne pas court-circuiter
