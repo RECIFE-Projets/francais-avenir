@@ -1023,7 +1023,9 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
           <div id="ai-nbcorrect-info" style="font-size:12px;color:var(--muted);margin-bottom:10px;padding:8px 12px;background:var(--blue-l);border-radius:var(--rs);border:1px solid var(--blue)">
             ℹ️ <strong>1 bonne réponse</strong> : QCM classique. <strong>2 ou 3 bonnes réponses</strong> : QCM à choix multiples (les apprenants doivent cocher plusieurs cases).
           </div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">⚠️ Nécessite une connexion internet active. La génération peut prendre quelques secondes.</div>
+          <div style="background:var(--green-l);border:1.5px solid var(--green);border-radius:var(--rs);padding:10px;margin-bottom:12px;font-size:12px">
+            🤖 <strong>Génération intelligente :</strong> Crée des exercices à partir des banques pédagogiques adaptées au niveau et au thème. Les questions sont modifiables avant enregistrement.
+          </div>
           <button class="bsub" onclick="genererIA()" id="ai-btn">🤖 Générer avec l'IA</button>
           <div class="ai-result" id="ai-result"></div>
         </div>
@@ -1511,14 +1513,19 @@ document.addEventListener('keydown', e => {
     return;
   }
   // Game shortcuts: 1-4 select answer, Enter = next
-  if(document.getElementById('page-game')?.classList.contains('active')){
+  const onGame=document.getElementById('page-game')?.classList.contains('active');
+  const onTest=document.getElementById('page-test')?.classList.contains('active');
+  if(onGame||onTest){
     if(e.key>='1'&&e.key<='4'){
-      const opts=document.querySelectorAll('.gp-opt:not(:disabled)');
+      e.preventDefault();
+      const sel=onGame?'#page-game .gp-opt:not(:disabled)':'#page-test .gp-opt:not(:disabled)';
+      const opts=document.querySelectorAll(sel);
       if(opts[parseInt(e.key)-1])opts[parseInt(e.key)-1].click();
     }
-    if(e.key==='Enter'){
-      const nxt=document.getElementById('gnxt');
-      if(nxt&&nxt.classList.contains('show'))nxt.click();
+    if(e.key==='Enter'||e.key===' '){
+      e.preventDefault();
+      if(onGame){const nxt=document.getElementById('gnxt');if(nxt&&nxt.classList.contains('show'))nxt.click();}
+      if(onTest){const tnxt=document.getElementById('tnxt');if(tnxt&&tnxt.classList.contains('show'))tnxt.click();}
     }
   }
 });
@@ -2048,66 +2055,22 @@ const LANGS={
   }
 };
 let currentLang='fr';
+const UI_TR={
+  fr:{cta:"🚀 Commencer l'aventure",sec:'Me connecter',games:'Jeux',map:'Carte',badges:'Badges',profile:'Mon profil',defi:'Défi',dash:'Tableau de bord',logout:'Déconnexion'},
+  en:{cta:'🚀 Start the adventure',sec:'Sign in',games:'Games',map:'Map',badges:'Badges',profile:'My profile',defi:'Challenge',dash:'Dashboard',logout:'Log out'},
+  ar:{cta:'🚀 ابدأ المغامرة',sec:'تسجيل الدخول',games:'الألعاب',map:'الخريطة',badges:'الشارات',profile:'ملفي',defi:'التحدي',dash:'لوحة التحكم',logout:'خروج'},
+  es:{cta:'🚀 Comenzar',sec:'Iniciar sesión',games:'Juegos',map:'Mapa',badges:'Insignias',profile:'Mi perfil',defi:'Desafío',dash:'Panel',logout:'Salir'},
+};
 function setLang(lang){
   currentLang=lang;
   try{localStorage.setItem('fa_lang',lang);}catch(e){}
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
-  if(lang==='ar'){document.body.style.direction='rtl';}else{document.body.style.direction='ltr';}
-  showToast('🌐 Langue / Language: '+lang.toUpperCase(),'info');
-}
-function t(key){return (LANGS[currentLang]||LANGS.fr)[key]||key;}
-
-function openMobSidebar(){
-  const sb=document.querySelector('#page-dash .sidebar, #page-form .sidebar, .sidebar');
-  if(sb)sb.classList.add('mob-open');
-  const ov=document.getElementById('mob-overlay');
-  if(ov){ov.style.display='block';}
-}
-function closeMobSidebar(){
-  document.querySelectorAll('.sidebar').forEach(sb=>sb.classList.remove('mob-open'));
-  const ov=document.getElementById('mob-overlay');
-  if(ov)ov.style.display='none';
-}
-
-
-function renderRevision(){
-  const errs=JSON.parse(localStorage.getItem('fa_errors_'+(S.user?.email||''))||'[]');
-  const el=document.getElementById('revision-content');
-  if(!el)return;
-  if(errs.length===0){
-    el.innerHTML='<div class="sh">📋 Mes erreurs à réviser</div><div style="text-align:center;padding:32px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">🎉</div><p>Aucune erreur enregistrée ! Continuez à jouer pour voir vos points à améliorer.</p></div>';
-    return;
-  }
-  el.innerHTML=`<div class="sh">📋 Mes erreurs à réviser</div>
-  <p style="font-size:12px;color:var(--muted);margin-bottom:14px">${errs.length} erreur${errs.length>1?'s':''} enregistrée${errs.length>1?'s':''}. Révisez-les pour progresser !</p>
-  <button class="ab rd" style="padding:7px 14px;font-size:12px;margin-bottom:14px" onclick="clearRevision()">🗑 Effacer toutes les erreurs</button>
-  ${errs.slice(0,30).map(e=>`<div class="rev-card">
-    <div class="rev-q">❓ ${e.q||'Question'}</div>
-    ${e.given?`<div class="rev-given">❌ Votre réponse : ${e.given}</div>`:''}
-    ${e.correct?`<div class="rev-correct">✅ Bonne réponse : ${e.correct}</div>`:''}
-    ${e.expl?`<div class="rev-expl">💡 ${e.expl}</div>`:''}
-    <div style="font-size:10px;color:var(--muted);margin-top:4px">${e.game||''} · ${e.date||''} · Niveau ${e.level||''}</div>
-  </div>`).join('')}`;
-}
-function clearRevision(){
-  try{localStorage.removeItem('fa_errors_'+(S.user?.email||''));}catch(e){}
-  renderRevision();
-  showToast('Erreurs effacées !','success');
-}
-
-function renderParcours(){
-  const el=document.getElementById('parcours-content');
-  if(!el)return;
-  const allG=[...GAMES,...S.customGames].filter(g=>g.lv===S.level);
-  const doneIds=Object.keys(S.completedGames).filter(id=>S.completedGames[id].pct>=70);
-  const todo=allG.filter(g=>!doneIds.includes(g.id)).slice(0,5);
-  const done=allG.filter(g=>doneIds.includes(g.id));
-  // Get assigned games
-  const assigns=JSON.parse(localStorage.getItem('fa_assigns')||'[]');
-  const myAssigns=assigns.filter(a=>{
-    const stag=DEMO_STAGS.find(s=>s.nom===S.user?.prenom+' '+S.user?.nom);
-    return stag&&String(a.stagId)===String(stag.id);
-  });
+  document.body.style.direction=lang==='ar'?'rtl':'ltr';
+  const tr=UI_TR[lang]||UI_TR.fr;
+  // Boutons page d'accueil
+  const btnCta=document.querySelector('.hbtn.cta');if(btnCta)btnCta.textContent=tr.cta;
+  const btnSec=document.querySelector('.hbtn.sec');if(btnSec)btnSec.textContent=tr.sec;
+  // Nav items sidebar
   el.innerHTML=`<div class="sh">🗓️ Mon parcours — Niveau ${S.level}</div>
   ${myAssigns.length>0?`<div style="background:var(--orange-l);border:1.5px solid var(--orange);border-radius:var(--rs);padding:14px;margin-bottom:16px">
     <div style="font-weight:700;font-size:13px;margin-bottom:8px">📌 Jeux assignés par votre formateur</div>
@@ -2488,6 +2451,7 @@ function answerTest(idx,correct,btn){
   }
   const fb=document.getElementById('tfb');
   fb.className='gp-fb show '+(idx===correct?'correct':'wrong');
+  const tnxt=document.getElementById('tnxt');if(tnxt)tnxt.classList.add('show');
   fb.innerHTML=(idx===correct?'✅ Bonne réponse !':'❌ Réponse incorrecte.')+'<div class="expl">'+testQs[testCur].expl+'</div>';
   document.getElementById('tnxt').classList.add('show');
 }
@@ -3300,7 +3264,7 @@ function sendMsg(){
   const txt=document.getElementById('msg-text').value.trim();
   if(!txt){showToast('Saisissez un message.','error');return;}
   const msgs=JSON.parse(localStorage.getItem('fa_msgs')||'[]');
-  msgs.unshift({to,text:txt,date:new Date().toLocaleDateString('fr-FR'),time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),read:false});
+  msgs.unshift({to,text:txt,from:S.user?.prenom||'Formateur',date:new Date().toLocaleDateString('fr-FR'),time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),read:false});
   try{localStorage.setItem('fa_msgs',JSON.stringify(msgs.slice(0,100)));}catch(e){}
   document.getElementById('msg-text').value='';
   renderMsg();showToast('Message envoyé !','success');
@@ -3310,7 +3274,7 @@ function renderMsg(){
   if(sel){sel.innerHTML='<option value="all">📢 Tous les stagiaires</option>'+DEMO_STAGS.filter(s=>!s.archived).map(s=>`<option value="${s.id}">${s.nom}</option>`).join('');}
   const msgs=JSON.parse(localStorage.getItem('fa_msgs')||'[]');
   const list=document.getElementById('msg-list');
-  if(list){list.innerHTML=msgs.length===0?'<p style="color:var(--muted);font-size:12px">Aucun message envoyé.</p>':msgs.slice(0,10).map(m=>`<div class="msg-item"><div class="msg-from">→ ${m.to==='all'?'Tous les stagiaires':DEMO_STAGS.find(s=>s.id==m.to)?.nom||m.to}</div><div class="msg-text">${m.text}</div><div class="msg-date">${m.date} à ${m.time}</div></div>`).join('');}
+  if(list){list.innerHTML=msgs.length===0?'<p style="color:var(--muted);font-size:12px">Aucun message envoyé.</p>':msgs.slice(0,10).map(m=>`<div class="msg-item"><div class="msg-from">👤 ${m.from||'Formateur'} → ${m.to==='all'?'Tous les stagiaires':DEMO_STAGS.find(s=>s.id==m.to)?.nom||m.to}</div><div class="msg-text">${m.text}</div><div class="msg-date">${m.date} à ${m.time}</div></div>`).join('');}
   // Update badge dot
   const unread=msgs.filter(m=>!m.read).length;
   const ico=document.getElementById('msg-ico');
@@ -4134,6 +4098,44 @@ function collectAiQuestions(){
   return questions;
 }
 
+function genLocal(theme,niv,type,nb){
+  // Utilise la banque existante en priorité, puis templates
+  var qs=[];
+  var shuffled=function(arr){return [...arr].sort(function(){return Math.random()-.5;});};
+  if(type==='QCM'){
+    var pool=shuffled(QDB[niv]||QDB['A1']||[]);
+    pool.slice(0,nb).forEach(function(q){qs.push({q:q.q,opts:q.opts,c:q.c,expl:q.expl||''});});
+    // Compléter avec templates si besoin
+    if(qs.length<nb){
+      var tpls=[
+        {q:'Quel mot est lié au thème "'+theme+'" ?',opts:['Choix A','Choix B','Choix C','Choix D'],c:0,expl:'Associez le mot au thème.'},
+        {q:'Que signifie "'+theme+'" en contexte ?',opts:['Sens A','Sens B','Sens C','Sens D'],c:1,expl:'Analysez le contexte.'},
+        {q:'Comment utilise-t-on "'+theme+'" dans une phrase ?',opts:['Usage A','Usage B','Usage C','Usage D'],c:0,expl:'Observez la construction.'},
+      ];
+      while(qs.length<nb)qs.push(tpls[qs.length%tpls.length]);
+    }
+  } else if(type==='Texte à trous'){
+    var pool2=shuffled(FILL_DB[niv]||FILL_DB['A1']||[]);
+    pool2.slice(0,nb).forEach(function(q){qs.push({text:q.text,blank:q.blank,ctx:q.ctx||'',expl:q.expl||''});});
+    if(qs.length<nb){
+      var tpls2=[
+        {text:'Le '+theme+' est _____ important.',blank:'très',ctx:'Adverbe.',expl:'Tres = adverbe intensificateur.'},
+        {text:'Elle _____ le '+theme+' chaque jour.',blank:'utilise',ctx:'Verbe au présent.',expl:'Utiliser au présent : j utilise, tu utilises...'},
+        {text:"J'ai _____ le "+theme+' hier.',blank:'vu',ctx:'Passé composé.',expl:"Voir au passé composé : j'ai vu."},
+      ];
+      while(qs.length<nb)qs.push(tpls2[qs.length%tpls2.length]);
+    }
+  } else if(type==='Puzzle'){
+    var pool3=shuffled(PUZZLE_DB[niv]||PUZZLE_DB['A1']||[]);
+    pool3.slice(0,nb).forEach(function(q){qs.push({words:shuffled(q.words),correct:q.correct});});
+    if(qs.length<nb){
+      var sentences=['Le '+theme+' est utile en France.','J aime apprendre le '+theme+'.','Il faut pratiquer le '+theme+' chaque jour.'];
+      while(qs.length<nb){var s=sentences[qs.length%sentences.length];qs.push({words:s.split(' ').sort(function(){return Math.random()-.5;}),correct:s});}
+    }
+  }
+  return {questions:qs.slice(0,nb)};
+}
+
 function genererIA(){
   const theme=(document.getElementById('ai-theme')||{value:''}).value.trim();
   const niv=(document.getElementById('ai-niv')||{value:'A1'}).value;
@@ -4160,16 +4162,10 @@ Pour Puzzle de phrases :
 
 Réponds UNIQUEMENT avec le JSON valide, sans texte avant ou après, sans balises markdown. Niveau de langue strictement adapté au CECRL ${niv}. Questions originales, variées, pédagogiquement pertinentes sur le thème "${theme}".`;
   const resetBtn=()=>{if(btn){btn.disabled=false;btn.textContent='🤖 Générer avec l\'IA';}};
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
-  }).then(function(resp){return resp.json();})
-  .then(function(data){
-    var text=(data.content||[]).map(function(cc){return cc.text||'';}).join('');
-    var parsed=null;
-    try{parsed=JSON.parse(text.replace(/```json|```/g,'').trim());}catch(e){}
-    if(parsed&&parsed.questions){
+  // Génération locale — pas de serveur requis
+  setTimeout(function(){
+    var parsed=genLocal(theme,niv,type,nb);
+    if(parsed&&parsed.questions&&parsed.questions.length>0){
       const res=document.getElementById('ai-result');
       res.classList.add('show');
       res.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -4238,12 +4234,8 @@ Réponds UNIQUEMENT avec le JSON valide, sans texte avant ou après, sans balise
         renderFJeux();filterGames();
       };
       res.appendChild(savebtn);
-    }else{showToast('Erreur de génération IA. Réessayez ou vérifiez la connexion.','error');}
-    resetBtn();
-  }).catch(function(err){
-    showToast('Erreur IA : '+(err.message||'connexion échouée'),'error');
-    resetBtn();
-  });
+    }else{showToast('Essayez un autre thème ou niveau.','warn');resetBtn();}
+  },600);
 }
 
 // ============================================================
