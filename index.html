@@ -2399,18 +2399,64 @@ function buildTestPool(){
   return pool.sort(()=>Math.random()-.5);
 }
 function startTest(){
+  // Progressive test — reset state
+  progTestLevel=0;
+  progTestLevelScores={};
+  progTestStopped=false;
+  testErrors=[];
+  testScore=0;
+  testCur=0;
+
+  // Build pool for first level
+  buildProgLevelPool();
+
   startAntiCheat();
-  testQs=buildTestPool();
-  testCur=0;testScore=0;testErrors=[];
   renderTestQ();
-  let s=20*60;
+
+  // Timer — longer for progressive approach: 3 min per level max = 18min total
+  let s=18*60;
   clearInterval(testTimer);
   testTimer=setInterval(()=>{
     s--;
-    const m=Math.floor(s/60),sec=s%60;
-    document.getElementById('tt-time').textContent=`${m}:${sec.toString().padStart(2,'0')}`;
+    const el=document.getElementById('tt-time');
+    if(el)el.textContent=Math.floor(s/60)+':'+(s%60).toString().padStart(2,'0');
     if(s<=0){clearInterval(testTimer);endTest();}
   },1000);
+
+  updateProgTestUI();
+}
+
+function buildProgLevelPool(){
+  const lv=progTestLvOrder[progTestLevel];
+  const pool=[...(QDB[lv]||[])].sort(()=>Math.random()-.5);
+  // Take progTestQPerLevel unique questions
+  testQs=pool.slice(0,progTestQPerLevel);
+  testCur=0;
+  progTestLevelScores[lv]={correct:0,total:testQs.length,wrong:[]};
+}
+
+function updateProgTestUI(){
+  const lv=progTestLvOrder[progTestLevel];
+  const titleEl=document.getElementById('prog-test-title');
+  if(titleEl)titleEl.textContent='Exploration du français — Niveau '+lv;
+  // Update pill states
+  progTestLvOrder.forEach((l,i)=>{
+    const el=document.getElementById('ptl-'+l);
+    if(!el)return;
+    if(i<progTestLevel){
+      // Passed level
+      const sc=progTestLevelScores[l];
+      const ok=sc&&sc.correct>=Math.ceil(sc.total*0.6);
+      el.style.cssText='padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;background:'+(ok?'rgba(46,204,113,.8)':'rgba(231,76,60,.6)')+';opacity:1';
+      el.textContent=l+' '+(ok?'✓':'✗');
+    } else if(i===progTestLevel){
+      el.style.cssText='padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;background:rgba(255,255,255,.9);color:#2C3E50;opacity:1';
+      el.textContent='→ '+l;
+    } else {
+      el.style.cssText='padding:3px 10px;border-radius:50px;font-size:11px;font-weight:600;opacity:.4';
+      el.textContent=l;
+    }
+  });
 }
 function renderTestQ(){
   if(testCur>=testQs.length){clearInterval(testTimer);endTest();return;}
@@ -2422,7 +2468,8 @@ function renderTestQ(){
   let html='<div class="gp">';
   // Audio if present
   if(q.audio){
-    html+=`<div class="audio-box"><button class="play-btn" onclick="speakText('${q.audio.replace(/'/g,"\\'")}',this)" id="tst-play-${testCur}">▶️</button><div style="flex:1"><div class="audio-txt">🎧 Cliquez pour écouter le texte audio</div><div class="audio-progress"><div class="audio-prog-fill" id="apf-${testCur}"></div></div></div></div>`;
+    const safeAudioId='tst-audio-'+testCur;
+    html+=`<div class="audio-box"><button class="play-btn" id="${safeAudioId}" data-text="${(q.audio||'').replace(/"/g,'&quot;')}">▶️</button><div style="flex:1"><div class="audio-txt">🎧 Cliquez pour écouter le texte audio</div><div class="audio-progress"><div class="audio-prog-fill" id="apf-${testCur}"></div></div></div></div>`;
   }
   html+=`<div class="gp-q">${q.q}</div><div class="gp-opts">`;
   opts.forEach((item,idx)=>{
@@ -2448,9 +2495,24 @@ function nextTestQ(){testCur++;if(_testCorrect)testScore++;renderTestQ();}
 function endTest(){
   stopAntiCheat();
   saveUserData(); // save test violations count
-  const pct=testScore/testQs.length;
+  // Calculate level from progressive scores
   let lv='A1';
-  if(pct>=.88)lv='C2';else if(pct>=.72)lv='C1';else if(pct>=.56)lv='B2';else if(pct>=.40)lv='B1';else if(pct>=.22)lv='A2';
+  const lvOrder=['A1','A2','B1','B2','C1','C2'];
+  // Find highest level where the stagiaire scored >= 60%
+  for(let i=lvOrder.length-1;i>=0;i--){
+    const sc=progTestLevelScores[lvOrder[i]];
+    if(sc&&sc.correct/sc.total>=0.6){lv=lvOrder[i];break;}
+  }
+  // Also consider levels not reached (stopped early = that level is the ceiling)
+  const levelsAttempted=Object.keys(progTestLevelScores);
+  const totalCorrect=levelsAttempted.reduce((a,l)=>a+(progTestLevelScores[l]?.correct||0),0);
+  const totalQs=levelsAttempted.reduce((a,l)=>a+(progTestLevelScores[l]?.total||0),0);
+  const pct=totalQs>0?totalCorrect/totalQs:0;
+  // Collect errors from all levels
+  testErrors=[];
+  levelsAttempted.forEach(l=>{
+    (progTestLevelScores[l]?.wrong||[]).forEach(e=>testErrors.push({...e,level:l}));
+  });
   const viol=S.testViolations>0?`<div style="background:var(--orange-l);border:1.5px solid var(--orange);border-radius:var(--rs);padding:12px;margin:12px 0;font-size:13px;font-weight:600;color:var(--orange-d)">⚠️ ${S.testViolations} changement(s) de fenêtre détecté(s) pendant le test.</div>`:'';
   let errHtml='';
   if(testErrors.length>0){
@@ -2464,34 +2526,80 @@ function endTest(){
 // ============================================================
 // SPEECH SYNTHESIS (Audio via Web Speech API)
 // ============================================================
+// Stockage global des voix pour éviter rechargement
+window._frVoice=null;
+function loadFrVoice(cb){
+  const tryLoad=()=>{
+    const voices=window.speechSynthesis.getVoices();
+    if(voices.length>0){
+      window._frVoice=voices.find(v=>v.lang==='fr-FR')
+        ||voices.find(v=>v.lang.startsWith('fr'))
+        ||voices.find(v=>v.default)
+        ||voices[0];
+      if(cb)cb();
+      return true;
+    }
+    return false;
+  };
+  if(tryLoad())return;
+  // Essayer plusieurs fois (certains navigateurs chargent les voix en différé)
+  let tries=0;
+  const interval=setInterval(()=>{
+    tries++;
+    if(tryLoad()||tries>10)clearInterval(interval);
+  },300);
+  if(window.speechSynthesis.onvoiceschanged!==undefined){
+    window.speechSynthesis.onvoiceschanged=()=>{tryLoad();};
+  }
+}
+// Précharger les voix dès que possible
+if(window.speechSynthesis){
+  loadFrVoice(null);
+  window.speechSynthesis.onvoiceschanged=()=>{loadFrVoice(null);};
+}
+
 function speakText(text, btn){
   if(!window.speechSynthesis){
-    showToast('Audio non disponible sur ce navigateur. Utilisez Chrome ou Edge.','warn');
+    showToast('Audio non disponible. Utilisez Chrome ou Edge.','warn');
     return;
   }
+  // Arrêter tout audio en cours
   window.speechSynthesis.cancel();
+
   const doSpeak=()=>{
     const utt=new SpeechSynthesisUtterance(text);
-    // Try fr-FR first, fallback to fr, then any available
-    const voices=window.speechSynthesis.getVoices();
-    const frVoice=voices.find(v=>v.lang==='fr-FR')||voices.find(v=>v.lang.startsWith('fr'))||voices[0];
-    if(frVoice)utt.voice=frVoice;
-    utt.lang='fr-FR';utt.rate=0.85;utt.pitch=1;
-    if(btn){btn.textContent='⏸️';btn.classList.add('playing');}
-    utt.onend=()=>{if(btn){btn.textContent='▶️';btn.classList.remove('playing');}};
-    utt.onerror=()=>{
-      if(btn){btn.textContent='▶️';btn.classList.remove('playing');}
-      showToast('Audio indisponible. Vérifiez vos paramètres sonores.','warn');
+    if(window._frVoice)utt.voice=window._frVoice;
+    utt.lang='fr-FR';
+    utt.rate=0.80;  // légèrement plus lent pour les apprenants
+    utt.pitch=1;
+    utt.volume=1;
+    if(btn){
+      btn.textContent='⏹️';
+      btn.onclick=()=>{window.speechSynthesis.cancel();btn.textContent='▶️';btn.onclick=()=>speakText(text,btn);};
+    }
+    utt.onend=()=>{if(btn){btn.textContent='▶️';btn.onclick=()=>speakText(text,btn);}};
+    utt.onerror=(e)=>{
+      if(e.error==='canceled')return; // annulation volontaire
+      if(btn){btn.textContent='▶️';}
+      showToast('Problème audio. Réessayez ou utilisez Chrome.','warn');
     };
     window.speechSynthesis.speak(utt);
+    // Chrome bug : parfois la synthèse se bloque → redémarrer
+    const timeout=setTimeout(()=>{
+      if(window.speechSynthesis.speaking){
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      }
+    },1000);
+    utt.onend=()=>{clearTimeout(timeout);if(btn){btn.textContent='▶️';btn.onclick=()=>speakText(text,btn);}};
   };
-  // Voices may not be loaded yet — wait if needed
-  if(window.speechSynthesis.getVoices().length>0){
+
+  if(window._frVoice){
     doSpeak();
   } else {
-    window.speechSynthesis.onvoiceschanged=()=>{doSpeak();window.speechSynthesis.onvoiceschanged=null;};
-    // Fallback timeout if onvoiceschanged never fires
-    setTimeout(()=>{if(window.speechSynthesis.getVoices().length===0){showToast('Voix non disponibles sur cet appareil.','warn');}else doSpeak();},1500);
+    loadFrVoice(doSpeak);
+    // Fallback : démarrer quand même sans voix choisie après 1s
+    setTimeout(()=>{if(!window.speechSynthesis.speaking)doSpeak();},1000);
   }
 }
 
@@ -2749,8 +2857,8 @@ function launchQCM(g,area){
 
     // Audio
     if(q.audio){
-      const safeAudio=q.audio.replace(/'/g,"\'");
-      html+=`<div class="audio-box"><button class="play-btn" onclick="speakText('${safeAudio}',this)">▶️</button><div style="flex:1"><div class="audio-txt">🎧 Cliquez pour écouter</div></div></div>`;
+      const audioId='qcm-audio-'+cur+'-'+Date.now();
+      html+=`<div class="audio-box"><button class="play-btn" id="${audioId}" data-text="${(q.audio||'').replace(/"/g,'&quot;')}">▶️</button><div style="flex:1"><div class="audio-txt">🎧 Cliquez pour écouter</div></div></div>`;
     }
 
     // Vidéo YouTube
@@ -2773,11 +2881,15 @@ function launchQCM(g,area){
 
     html+=`</div>
     <div class="gp-fb" id="gfb"></div>
-    <button class="gp-next" id="gnxt" style="display:none">Continuer →</button>
+    <button class="gp-next" id="gnxt">Continuer →</button>
     </div>`;
 
     d.innerHTML=html;
     area.appendChild(d);
+    // Bind audio buttons safely
+    d.querySelectorAll('[data-text]').forEach(btn=>{
+      btn.addEventListener('click',function(){speakText(this.getAttribute('data-text'),this);});
+    });
 
     // Hint raccourcis clavier
     const hint=document.createElement('p');
@@ -3774,9 +3886,6 @@ function updAiCorrectInfo(){
   if(v==='1')box.innerHTML=`ℹ️ <strong>1 bonne réponse</strong> : QCM classique — l'apprenant choisit une seule réponse parmi les propositions.`;
   else box.innerHTML=`ℹ️ <strong>${v} bonnes réponses</strong> : QCM à choix multiples — l'apprenant doit sélectionner exactement ${v} réponses correctes parmi les propositions.`;
 }
-
-async 
-
 
 // ── Impression des exercices ──
 function printExercise(gameId){
