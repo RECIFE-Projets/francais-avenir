@@ -5192,58 +5192,92 @@ function initApp(){
   // Page d'accueil déjà visible par défaut (class active en HTML)
   // JS sert uniquement à rediriger si session existante
   try{
-    const lastEmail=localStorage.getItem('fa_last_email');
+    let lastEmail=null;
+    try{lastEmail=localStorage.getItem('fa_last_email');}catch(lsErr){}
+    
     if(lastEmail && loadUserData(lastEmail) && S.user){
       // Session restaurée — aller au bon espace
-      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+      
       if(S.user.type==='formateur'){
         const pf=document.getElementById('page-form');
-        if(pf)pf.classList.add('active');
-        showFTab('f-stag');
+        if(pf){
+          pf.classList.add('active');
+          try{showFTab('f-stag');}catch(e){}
+        } else {
+          // page-form introuvable → page-home
+          const home=document.getElementById('page-home');
+          if(home)home.classList.add('active');
+        }
       } else {
         const pd=document.getElementById('page-dash');
-        if(pd)pd.classList.add('active');
-        try{updSidebar();}catch(e){}
-        try{updDash();}catch(e){}
-        try{showTab('t-dash');}catch(e){}
+        if(pd){
+          pd.classList.add('active');
+          try{updSidebar();}catch(e){}
+          try{updDash();}catch(e){}
+          try{showTab('t-dash');}catch(e){}
+        } else {
+          // page-dash introuvable → page-home
+          const home=document.getElementById('page-home');
+          if(home)home.classList.add('active');
+        }
+      }
+    } else {
+      // Pas de session — s'assurer que page-home est active
+      const anyActive=document.querySelector('.page.active');
+      if(!anyActive){
+        const home=document.getElementById('page-home');
+        if(home)home.classList.add('active');
       }
     }
-    // Sinon page-home reste active (déjà définie dans HTML)
   }catch(e){
     console.warn('initApp error:', e);
     // En cas d'erreur, forcer page-home visible
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    try{document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});}catch(e2){}
     const home=document.getElementById('page-home');
     if(home)home.classList.add('active');
   }
   try{const l=localStorage.getItem('fa_lang');if(l)setLang(l);}catch(e){}
 }
 
+// === GESTION DU LOADER ===
+// Supprimer le loading-screen du DOM à la fin de l'animation (2.8s)
+setTimeout(function(){
+  const ls=document.getElementById('loading-screen');
+  if(ls){ls.style.display='none';ls.remove();}
+}, 2850);
+
 // Lancer initApp après 2.4s (juste après la fin de l'animation CSS)
 setTimeout(initApp, 2400);
 
 // Failsafe : si après 3s aucune page n'est active, forcer page-home
-setTimeout(()=>{
-  const anyActive = document.querySelector('.page.active');
+// Failsafe robuste : vérifier toutes les 500ms que le site est visible
+var _fsChecks=0;
+var _fsInterval=setInterval(function(){
+  _fsChecks++;
+  if(_fsChecks>10){clearInterval(_fsInterval);return;} // stop après 5s
+  const anyActive=document.querySelector('.page.active');
   if(!anyActive){
-    const home = document.getElementById('page-home');
-    if(home) home.classList.add('active');
-    console.warn('Failsafe: forced page-home active');
-  } else {
-    // Vérifier que la page active n'est pas vide (page-dash sans contenu)
-    const activePg = document.querySelector('.page.active');
-    if(activePg && activePg.id==='page-dash'){
-      const grid = document.getElementById('games-grid');
-      if(grid && grid.children.length===0){
-        try{filterGames();}catch(e){
-          document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-          const home=document.getElementById('page-home');
-          if(home)home.classList.add('active');
-        }
+    console.warn('Failsafe '+_fsChecks+': aucune page active, forçage page-home');
+    const home=document.getElementById('page-home');
+    if(home)home.classList.add('active');
+    clearInterval(_fsInterval);
+  } else if(anyActive.id==='page-dash'){
+    // page-dash active mais grille vide ?
+    const grid=document.getElementById('games-grid');
+    if(grid&&grid.children.length===0){
+      try{filterGames();}catch(e){
+        console.warn('filterGames crash, retour page-home');
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+        const home=document.getElementById('page-home');
+        if(home)home.classList.add('active');
       }
     }
+    clearInterval(_fsInterval);
+  } else {
+    clearInterval(_fsInterval);
   }
-}, 3000);
+}, 500);
 // Fallback immédiat si la page était déjà chargée
 if(document.readyState==='complete'){
   // L'animation CSS prend 2.3s — ne pas court-circuiter
