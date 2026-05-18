@@ -5189,113 +5189,87 @@ renderGameFields();
 // L'écran de chargement disparaît via CSS (animation 2.3s)
 // Ce code s'exécute EN PARALLÈLE, indépendamment
 function initApp(){
-  // Page d'accueil déjà visible par défaut (class active en HTML)
-  // JS sert uniquement à rediriger si session existante
+  // page-home reste TOUJOURS visible au départ (défini dans HTML)
+  // On tente de restaurer la session de façon non-bloquante
   try{
     let lastEmail=null;
-    try{lastEmail=localStorage.getItem('fa_last_email');}catch(lsErr){}
+    try{lastEmail=localStorage.getItem('fa_last_email');}catch(e){}
     
     if(lastEmail && loadUserData(lastEmail) && S.user){
-      // Session restaurée — aller au bon espace
-      document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+      // Session trouvée : proposer de la reprendre via un bouton
+      // SANS toucher à l'affichage de page-home
+      const prenom = (S.user && S.user.prenom) ? S.user.prenom : 'toi';
+      const isForm = S.user && S.user.type === 'formateur';
       
-      if(S.user.type==='formateur'){
-        const pf=document.getElementById('page-form');
-        if(pf){
-          pf.classList.add('active');
-          try{showFTab('f-stag');}catch(e){}
-        } else {
-          // page-form introuvable → page-home
-          const home=document.getElementById('page-home');
-          if(home)home.classList.add('active');
-        }
-      } else {
-        const pd=document.getElementById('page-dash');
-        if(pd){
-          pd.classList.add('active');
-          try{updSidebar();}catch(e){}
-          try{updDash();}catch(e){}
-          try{showTab('t-dash');}catch(e){}
-        } else {
-          // page-dash introuvable → page-home
-          const home=document.getElementById('page-home');
-          if(home)home.classList.add('active');
-        }
-      }
-    } else {
-      // Pas de session — s'assurer que page-home est active
-      const anyActive=document.querySelector('.page.active');
-      if(!anyActive){
-        const home=document.getElementById('page-home');
-        if(home)home.classList.add('active');
-      }
+      // Injecter un bandeau "Reprendre" sur page-home
+      setTimeout(function(){
+        const homeContent = document.getElementById('home-actions');
+        if(!homeContent) return;
+        const band = document.createElement('div');
+        band.id = 'resume-band';
+        band.style.cssText = 'background:var(--green-l);border:2px solid var(--green);border-radius:var(--r);padding:14px 18px;margin:10px auto;max-width:480px;text-align:center;animation:fadeIn .4s ease';
+        band.innerHTML = '<div style="font-weight:700;font-size:15px">Bon retour, '+prenom+' !</div>'+
+          '<div style="font-size:13px;margin-bottom:10px">Votre session a ete sauvegardee.</div>'+
+          '<button class="bsub" onclick="resumeSession()">Reprendre ma session</button> '+
+          '<button class="bsub" style="background:var(--muted)" onclick="var b=document.getElementById('+String.fromCharCode(39)+'resume-band'+String.fromCharCode(39)+');if(b)b.remove()">Nouveau depart</button>';
+        homeContent.parentNode.insertBefore(band, homeContent);
+      }, 100);
     }
   }catch(e){
-    console.warn('initApp error:', e);
-    // En cas d'erreur, forcer page-home visible
-    try{document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});}catch(e2){}
-    const home=document.getElementById('page-home');
-    if(home)home.classList.add('active');
+    console.warn('initApp error (non-fatal):', e);
   }
-  try{const l=localStorage.getItem('fa_lang');if(l)setLang(l);}catch(e){}
 }
 
-// === GESTION DU LOADER ===
-// Supprimer le loading-screen du DOM à la fin de l'animation (2.8s)
-setTimeout(function(){
-  const ls=document.getElementById('loading-screen');
-  if(ls){ls.style.display='none';ls.remove();}
-}, 2850);
+function resumeSession(){
+  // Navigation vers le bon espace SEULEMENT quand l'utilisateur le demande
+  try{
+    const band = document.getElementById('resume-band');
+    if(band) band.remove();
+    
+    if(S.user && S.user.type === 'formateur'){
+      goTo('page-form');
+      setTimeout(function(){try{showFTab('f-stag');}catch(e){}}, 100);
+    } else {
+      goTo('page-dash');
+      setTimeout(function(){
+        try{updSidebar();}catch(e){}
+        try{updDash();}catch(e){}
+        try{showTab('t-dash');}catch(e){}
+        setTimeout(function(){
+          const g=document.getElementById('games-grid');
+          if(g && g.children.length===0){try{filterGames();}catch(e){}}
+        },200);
+      }, 100);
+    }
+  }catch(e){
+    console.warn('resumeSession error:', e);
+    goTo('page-home');
+  }
+}
 
-// Lancer initApp après 2.4s (juste après la fin de l'animation CSS)
+// ═══════════════════════════════════════════════
+// DÉMARRAGE — code exécuté au chargement de la page
+// ═══════════════════════════════════════════════
+
+// 1. Supprimer physiquement le loading-screen à la fin de l'animation CSS
+setTimeout(function(){
+  var ls = document.getElementById('loading-screen');
+  if(ls){ ls.style.display='none'; ls.remove(); }
+}, 2900);
+
+// 2. Lancer initApp à 2400ms (après la fin de l'animation loader 2300ms)
 setTimeout(initApp, 2400);
 
-// Failsafe : si après 3s aucune page n'est active, forcer page-home
-// Failsafe robuste : démarre à 3s (après initApp à 2.4s) pour attraper les pages vides
-var _fsChecks=0;
-var _fsInterval;
+// 3. Failsafe : si aucune page n'est active après 6s → forcer page-home
 setTimeout(function(){
-_fsInterval=setInterval(function(){
-  _fsChecks++;
-  if(_fsChecks>10){clearInterval(_fsInterval);return;} // stop après 5s
-  const anyActive=document.querySelector('.page.active');
-  if(!anyActive){
-    console.warn('Failsafe '+_fsChecks+': aucune page active, forçage page-home');
-    const home=document.getElementById('page-home');
-    if(home)home.classList.add('active');
-    clearInterval(_fsInterval);
-  } else if(anyActive.id==='page-dash'){
-    // page-dash active mais grille vide ?
-    const grid=document.getElementById('games-grid');
-    if(grid&&grid.children.length===0){
-      try{filterGames();}catch(e){
-        console.warn('filterGames crash, retour page-home');
-        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-        const home=document.getElementById('page-home');
-        if(home)home.classList.add('active');
-      }
-    }
-    clearInterval(_fsInterval);
-  } else {
-    clearInterval(_fsInterval);
+  if(!document.querySelector('.page.active')){
+    var home = document.getElementById('page-home');
+    if(home) home.classList.add('active');
   }
-}, 500);
+}, 6000);
 
-},3000); // delay failsafe start until after initApp// Fallback immédiat si la page était déjà chargée
-if(document.readyState==='complete'){
-  // L'animation CSS prend 2.3s — ne pas court-circuiter
-  // initApp sera appelée par le setTimeout ci-dessus
-}
+// 4. Sauvegarde automatique toutes les 5 minutes
+setInterval(function(){
+  if(S.user){ try{saveUserData();}catch(e){} }
+}, 5 * 60 * 1000);
 
-
-// Check URL params for session joining
-try{
-  const urlParams=new URLSearchParams(window.location.search);
-  if(urlParams.get('code')||urlParams.get('session')||urlParams.get('classe')){
-    const code=urlParams.get('code')||urlParams.get('session')||urlParams.get('classe');
-    showToast(`Session rejointe avec le code : ${code} 📱`,'info');
-  }
-}catch(e){}
-</script>
-</body>
-</html>
