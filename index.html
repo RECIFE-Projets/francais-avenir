@@ -2005,7 +2005,7 @@ let antiCheatActive = false;
 document.addEventListener('visibilitychange', () => {
   if(antiCheatActive && document.hidden) {
     S.testViolations++;
-    document.getElementById('ac-overlay').classList.add('show');
+    document.getElementById('ac-overlay')?.classList.add('show');
   }
 });
 window.addEventListener('blur', () => {
@@ -2040,8 +2040,8 @@ document.addEventListener('keydown', e => {
   }
 });
 function startAntiCheat(){ antiCheatActive=true; S.testViolations=0; }
-function stopAntiCheat(){ antiCheatActive=false; document.getElementById('ac-overlay').classList.remove('show'); }
-function resumeTest(){ document.getElementById('ac-overlay').classList.remove('show'); }
+function stopAntiCheat(){ antiCheatActive=false; document.getElementById('ac-overlay')?.classList.remove('show'); }
+function resumeTest(){ document.getElementById('ac-overlay')?.classList.remove('show'); }
 
 // ============================================================
 // GLOSSAIRE DATA
@@ -2509,11 +2509,11 @@ function showLevelUp(newLv){
   document.getElementById('lu-icon').textContent=lv.icon;
   document.getElementById('lu-title').textContent='Niveau '+newLv+' débloqué !';
   document.getElementById('lu-msg').textContent=lv.name+' — '+lv.desc;
-  document.getElementById('lu-overlay').classList.add('show');
+  document.getElementById('lu-overlay')?.classList.add('show');
   launchConfetti(80);
   playSound('levelup');
 }
-function closeLevelUp(){document.getElementById('lu-overlay').classList.remove('show');}
+function closeLevelUp(){document.getElementById('lu-overlay')?.classList.remove('show');}
 
 const AudioCtx=window.AudioContext||window.webkitAudioContext;
 let audioCtx=null;
@@ -2785,7 +2785,7 @@ function tpw(id,btn){
   btn.textContent=i.type==='password'?'👁️':'🙈';
 }
 let regType='stagiaire';
-function selType(t){regType=t;document.getElementById('t-stag').classList.toggle('sel',t==='stagiaire');document.getElementById('t-form').classList.toggle('sel',t==='formateur');}
+function selType(t){regType=t;document.getElementById('t-stag')?.classList.toggle('sel',t==='stagiaire');document.getElementById('t-form')?.classList.toggle('sel',t==='formateur');}
 function doRegister(){
   const p=document.getElementById('rg-p')?.value.trim(),n=document.getElementById('rg-n')?.value.trim();
   const e=document.getElementById('rg-e')?.value.trim(),e2=document.getElementById('rg-e2')?.value.trim();
@@ -2902,8 +2902,8 @@ function genPw(){const c='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789
 // SETUP
 // ============================================================
 let dispSel='essentiels',lvOptSel='test';
-function selDisp(d){dispSel=d;document.getElementById('d-ess').classList.toggle('sel',d==='essentiels');document.getElementById('d-av').classList.toggle('sel',d==='avenir');}
-function selLvOpt(o){lvOptSel=o;document.getElementById('o-test').classList.toggle('sel',o==='test');document.getElementById('o-know').classList.toggle('sel',o==='know');const _lvc=document.getElementById('lv-choice');if(_lvc)_lvc.style.display=o==='know'?'block':'none';}
+function selDisp(d){dispSel=d;document.getElementById('d-ess')?.classList.toggle('sel',d==='essentiels');document.getElementById('d-av')?.classList.toggle('sel',d==='avenir');}
+function selLvOpt(o){lvOptSel=o;document.getElementById('o-test')?.classList.toggle('sel',o==='test');document.getElementById('o-know')?.classList.toggle('sel',o==='know');const _lvc=document.getElementById('lv-choice');if(_lvc)_lvc.style.display=o==='know'?'block':'none';}
 function selUserLv(lv){
   S.level=lv;
   // Visual feedback: highlight selected pill
@@ -2918,7 +2918,7 @@ function nextSetup(s){
   if(s===2){
     const _ss1=document.getElementById('setup-s1');if(_ss1)_ss1.style.display='none';
     const _ss2a=document.getElementById('setup-s2');if(_ss2a)_ss2a.style.display='block';
-    document.getElementById('ss1').classList.add('done');document.getElementById('ss2').classList.add('active');
+    document.getElementById('ss1')?.classList.add('done');document.getElementById('ss2')?.classList.add('active');
     S.dispositif=dispSel==='avenir'?'#AVENIR':'Savoirs Essentiels';
   }
 }
@@ -2930,7 +2930,7 @@ function finishSetup(lv){
   if(lv)S.level=lv;
   const _ss2b=document.getElementById('setup-s2');if(_ss2b)_ss2b.style.display='none';
   const _ss3=document.getElementById('setup-s3');if(_ss3)_ss3.style.display='block';
-  document.getElementById('ss2').classList.add('done');document.getElementById('ss3').classList.add('active');
+  document.getElementById('ss2')?.classList.add('done');document.getElementById('ss3')?.classList.add('active');
   document.getElementById('setup-msg').textContent=`Votre niveau estimé en français est : ${S.level}. Votre aventure commence dans "${LVDATA.find(l=>l.code===S.level)?.name}" !`;
 }
 function goDash(){saveUserData();updSidebar();updDash();goTo('page-dash');showTab('t-dash');}
@@ -3070,7 +3070,7 @@ function answerTest(idx,correct,btn){
   fb.className='gp-fb show '+(idx===correct?'correct':'wrong');
   const tnxt=document.getElementById('tnxt');if(tnxt)tnxt.classList.add('show');
   fb.innerHTML=(idx===correct?'✅ Bonne réponse !':'❌ Réponse incorrecte.')+'<div class="expl">'+testQs[testCur].expl+'</div>';
-  document.getElementById('tnxt').classList.add('show');
+  document.getElementById('tnxt')?.classList.add('show');
 }
 function nextTestQ(){
   if(_testCorrect)testScore++;
@@ -3215,10 +3215,10 @@ function speakText(text, btn){
 function updSidebar(){
   if(!S.user)return;
   const init=(S.user.prenom[0]+(S.user.nom?.[0]||'')).toUpperCase();
-  document.getElementById('sb-av').textContent=init;
-  document.getElementById('sb-name').textContent=S.user.prenom;
-  document.getElementById('sb-lv').textContent='Niveau '+S.level;
-  document.getElementById('sb-xp').textContent=S.xp+' XP';
+  (function(){var _e=document.getElementById('sb-av');if(_e)_e.textContent=init;})();
+  (function(){var _e=document.getElementById('sb-name');if(_e)_e.textContent=S.user.prenom;})();
+  (function(){var _e=document.getElementById('sb-lv');if(_e)_e.textContent='Niveau '+S.level;})();
+  (function(){var _e=document.getElementById('sb-xp');if(_e)_e.textContent=S.xp+' XP';})();
   const rank=getXpRank(S.xp);
   const prog=getXpProgress(S.xp);
   const sbxpf=document.getElementById('sb-xpf');if(sbxpf)sbxpf.style.width=prog+'%';
@@ -3228,18 +3228,18 @@ function updSidebar(){
 }
 function updDash(){
   if(!S.user)return;
-  document.getElementById('wb-title').textContent=`Bonjour, ${S.user.prenom} ! 👋`;
+  (function(){var _e=document.getElementById('wb-title');if(_e)_e.textContent=`Bonjour, ${S.user.prenom} ! 👋`;})();
   // Rappel sauvegarde après 20 min
   if(!window._saveReminder){
     window._saveReminder=setTimeout(()=>{
       showToast('💾 Pensez à exporter votre sauvegarde dans Mon profil !','warn');
     },20*60*1000);
   }
-  document.getElementById('wb-lv').textContent=S.level;
-  document.getElementById('d-xp').textContent=S.xp;
-  document.getElementById('d-miss').textContent=S.missions;
-  document.getElementById('d-bdg').textContent=S.badges.length;
-  document.getElementById('d-streak').textContent=S.streak||0;
+  (function(){var _e=document.getElementById('wb-lv');if(_e)_e.textContent=S.level;})();
+  (function(){var _e=document.getElementById('d-xp');if(_e)_e.textContent=S.xp;})();
+  (function(){var _e=document.getElementById('d-miss');if(_e)_e.textContent=S.missions;})();
+  (function(){var _e=document.getElementById('d-bdg');if(_e)_e.textContent=S.badges.length;})();
+  (function(){var _e=document.getElementById('d-streak');if(_e)_e.textContent=S.streak||0;})();
   // Recent activity
   const ra=document.getElementById('recent-act');
   if(ra&&S.gameHistory&&S.gameHistory.length>0){
@@ -3257,12 +3257,12 @@ function updMasc(){
   document.getElementById('masc-bbl').textContent=msg;
   document.getElementById('masc-img').src=S.xp>200?'léo.png':'lina.png';
 }
-function toggleMasc(){document.getElementById('masc-bbl').classList.toggle('show');}
+function toggleMasc(){document.getElementById('masc-bbl')?.classList.toggle('show');}
 function showMasc(msg,img='léo.png'){
   document.getElementById('masc-bbl').textContent=msg;
-  document.getElementById('masc-bbl').classList.add('show');
+  document.getElementById('masc-bbl')?.classList.add('show');
   document.getElementById('masc-img').src=img;
-  setTimeout(()=>document.getElementById('masc-bbl').classList.remove('show'),4000);
+  setTimeout(()=>document.getElementById('masc-bbl')?.classList.remove('show'),4000);
 }
 
 // ============================================================
@@ -4387,7 +4387,7 @@ function lancerDefi(){
   document.getElementById('defi-link').textContent=`${window.location.origin}${window.location.pathname}?session=${code}`;
   genQR(code,'defi-qr');
   const dqrs=document.getElementById('defi-qr-section');if(dqrs)dqrs.style.display='block';
-  document.getElementById('defi-live').classList.add('show');
+  document.getElementById('defi-live')?.classList.add('show');
   // Build label including custom games if selected
   let actLabel=`${S.defiTypes.join(', ')} · Niveau(x) ${S.defiNivs.join(', ')}`;
   if(S.defiCustomGameIds&&S.defiCustomGameIds.length>0){
@@ -4408,7 +4408,7 @@ function lancerDefi(){
   sc.style.display='block';
   sc.innerHTML='<div style="font-weight:700;font-size:13px;margin-bottom:8px;color:var(--text)">📊 Scores en direct</div>'+DEMO_STAGS.slice(0,4).map(s=>`<div class="defi-score-row"><span>${s.nom.split(' ')[0]}</span><span style="color:var(--green)">${Math.floor(Math.random()*100)} pts</span></div>`).join('');
 }
-function stopDefi(){clearInterval(defiInterval);document.getElementById('defi-live').classList.remove('show');}
+function stopDefi(){clearInterval(defiInterval);document.getElementById('defi-live')?.classList.remove('show');}
 
 // ============================================================
 // FORMATEUR — MODE CLASSE
@@ -5094,7 +5094,7 @@ function printAttest(){window.print();}
 // GLOSSAIRE
 // ============================================================
 let _glLvFilter='';
-function toggleGl(){document.getElementById('gl-panel').classList.toggle('open');if(document.getElementById('gl-panel').classList.contains('open'))renderGl();}
+function toggleGl(){document.getElementById('gl-panel')?.classList.toggle('open');if(document.getElementById('gl-panel')?.classList.contains('open'))renderGl();}
 function filterGlLv(lv,btn){
   _glLvFilter=lv;
   document.querySelectorAll('#gl-level-tabs .cat-tab').forEach(b=>b.classList.remove('active'));
@@ -5251,9 +5251,11 @@ setTimeout(function(){
 setTimeout(initApp, 2400);
 
 // Failsafe : si après 3s aucune page n'est active, forcer page-home
-// Failsafe robuste : vérifier toutes les 500ms que le site est visible
+// Failsafe robuste : démarre à 3s (après initApp à 2.4s) pour attraper les pages vides
 var _fsChecks=0;
-var _fsInterval=setInterval(function(){
+var _fsInterval;
+setTimeout(function(){
+_fsInterval=setInterval(function(){
   _fsChecks++;
   if(_fsChecks>10){clearInterval(_fsInterval);return;} // stop après 5s
   const anyActive=document.querySelector('.page.active');
@@ -5278,7 +5280,8 @@ var _fsInterval=setInterval(function(){
     clearInterval(_fsInterval);
   }
 }, 500);
-// Fallback immédiat si la page était déjà chargée
+
+},3000); // delay failsafe start until after initApp// Fallback immédiat si la page était déjà chargée
 if(document.readyState==='complete'){
   // L'animation CSS prend 2.3s — ne pas court-circuiter
   // initApp sera appelée par le setTimeout ci-dessus
