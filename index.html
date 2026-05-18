@@ -1862,6 +1862,9 @@ function saveUserData(){
     user:S.user,xp:S.xp,level:S.level,dispositif:S.dispositif,
     missions:S.missions,badges:S.badges,streak:S.streak,streakDate:S.streakDate,
     completedGames:S.completedGames,
+    maxLevel:S.maxLevel||S.level||'A1',
+    groups:S.groups||[],
+    customGames:S.customGames||[],
     gameHistory:(S.gameHistory||[]).slice(0,50) // limit to 50 to save space
   };
   try{
@@ -1886,11 +1889,15 @@ function loadUserData(email){
     if(!raw)return false;
     const d=JSON.parse(raw);
     S.user=d.user;S.xp=d.xp||0;S.level=d.level||'A1';
+    S.maxLevel=d.maxLevel||d.level||'A1';
     S.dispositif=d.dispositif||'Savoirs Essentiels';
-    S.missions=d.missions||0;S.badges=d.badges||['A1'];
+    S.missions=d.missions||0;
+    S.badges=Array.isArray(d.badges)?d.badges:['A1'];
     S.streak=d.streak||0;S.streakDate=d.streakDate||'';
-    S.completedGames=d.completedGames||{};
-    S.gameHistory=d.gameHistory||[];
+    S.completedGames=(d.completedGames&&typeof d.completedGames==='object')?d.completedGames:{};
+    S.gameHistory=Array.isArray(d.gameHistory)?d.gameHistory:[];
+    S.groups=Array.isArray(d.groups)?d.groups:[];
+    S.customGames=Array.isArray(d.customGames)?d.customGames:[];
     return true;
   }catch(e){return false;}
 }
@@ -1962,7 +1969,7 @@ function checkLevelUp(){
   const curIdx=lvOrder.indexOf(S.level);
   if(curIdx<0||curIdx>=lvOrder.length-1)return;
   // Count distinct completed games at current level with >=70%
-  const allGames=[...GAMES,...S.customGames];
+  const allGames=[...GAMES,...(Array.isArray(S.customGames)?S.customGames:[])];
   const done=Object.entries(S.completedGames).filter(([id,v])=>{
     const g=allGames.find(x=>x.id===id);
     return g&&g.lv===S.level&&v.pct>=70;
@@ -3261,7 +3268,7 @@ function showMasc(msg,img='léo.png'){
 // MAP
 // ============================================================
 function renderMap(){
-  const allGames=[...GAMES,...S.customGames];
+  const allGames=[...GAMES,...(Array.isArray(S.customGames)?S.customGames:[])];
   const lvOrder=['A1','A2','B1','B2','C1','C2'];
   // Compute unlock state: unlocked if badge earned OR is first level
   const unlockedLevels=new Set(['A1',...S.badges]);
@@ -3322,7 +3329,7 @@ function filterGames(){
   const lvF=document.getElementById('gf-lv')?.value||'';
   const tF=document.getElementById('gf-type')?.value||'';
   const catF=document.getElementById('gf-cat')?.value||'';
-  const allGames=[...GAMES,...S.customGames];
+  const allGames=[...GAMES,...(Array.isArray(S.customGames)?S.customGames:[])];
   const filtered=allGames.filter(function(g){
     if(lvF&&g.lv!==lvF)return false;
     if(tF&&g.type!==tF)return false;
@@ -3331,7 +3338,7 @@ function filterGames(){
     return true;
   });
   document.getElementById('games-grid').innerHTML=filtered.map(g=>{
-    const done=S.completedGames[g.id];
+    const done=(S.completedGames&&S.completedGames[g.id])||null;
     const pct=done?done.pct:null;
     const border=done&&pct>=70?'border-color:var(--green);':'';
     const check=done?`<div style="position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;background:${pct>=70?'var(--green)':'var(--orange)'};color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${pct>=70?'✓':pct+'%'}</div>`:'';
@@ -3821,7 +3828,7 @@ function renderBadgesFull(){
   const userIdx=LVO.indexOf(S.level||'A1');
   el.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px">'+
     ORDER.map(function(lv,i){
-      const earned=(S.badges||[]).includes(lv);
+      const earned=(Array.isArray(S.badges)&&S.badges.includes(lv));
       const d=DEFS[lv];
       const locked=i>userIdx+1;
       return '<div style="border:2px solid '+(earned?d.color:locked?'var(--border)':'var(--orange)')+
@@ -5202,8 +5209,11 @@ function initApp(){
     }
     // Sinon page-home reste active (déjà définie dans HTML)
   }catch(e){
-    console.warn('initApp error (non-fatal):', e);
-    // Page d'accueil toujours visible grâce au HTML
+    console.warn('initApp error:', e);
+    // En cas d'erreur, forcer page-home visible
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    const home=document.getElementById('page-home');
+    if(home)home.classList.add('active');
   }
   try{const l=localStorage.getItem('fa_lang');if(l)setLang(l);}catch(e){}
 }
@@ -5218,6 +5228,19 @@ setTimeout(()=>{
     const home = document.getElementById('page-home');
     if(home) home.classList.add('active');
     console.warn('Failsafe: forced page-home active');
+  } else {
+    // Vérifier que la page active n'est pas vide (page-dash sans contenu)
+    const activePg = document.querySelector('.page.active');
+    if(activePg && activePg.id==='page-dash'){
+      const grid = document.getElementById('games-grid');
+      if(grid && grid.children.length===0){
+        try{filterGames();}catch(e){
+          document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+          const home=document.getElementById('page-home');
+          if(home)home.classList.add('active');
+        }
+      }
+    }
   }
 }, 3000);
 // Fallback immédiat si la page était déjà chargée
