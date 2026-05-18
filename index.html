@@ -2541,7 +2541,7 @@ function playSound(type){
 function getTodayKey(){return new Date().toDateString();}
 function getDailyChallenge(){
   const key='fa_daily_'+getTodayKey();
-  try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved)return saved;}catch(e){}
+  try{let saved=null;try{saved=JSON.parse(localStorage.getItem(key)||'null');}catch(_e){}if(saved)return saved;}catch(e){}
   // Pick 3 games based on day hash
   const allG=[...GAMES,...S.customGames];
   const lvG=allG.filter(g=>g.lv===S.level||g.lv==='A1');
@@ -3134,6 +3134,7 @@ function endTest(){
 // Stockage global des voix pour éviter rechargement
 window._frVoice=null;
 function loadFrVoice(cb){
+  if(!window.speechSynthesis){if(cb)cb();return;}
   const tryLoad=()=>{
     const voices=window.speechSynthesis.getVoices();
     if(voices.length>0){
@@ -3160,7 +3161,7 @@ function loadFrVoice(cb){
 // Précharger les voix dès que possible
 if(window.speechSynthesis){
   loadFrVoice(null);
-  window.speechSynthesis.onvoiceschanged=()=>{loadFrVoice(null);};
+  if(window.speechSynthesis){try{window.speechSynthesis.onvoiceschanged=()=>{loadFrVoice(null);};}catch(e){}}
 }
 
 function speakText(text, btn){
@@ -3739,7 +3740,7 @@ function showRes(score,total,xpGain,errors,gameId,gameTitle){
     S.gameHistory.unshift({gameId,title:gameTitle||gameId,score,pct,xp:earned,date:new Date().toLocaleDateString('fr-FR')});
     // Store errors for revision
     if(errors&&errors.length>0){
-      const errs=JSON.parse(localStorage.getItem('fa_errors_'+S.user.email)||'[]');
+      let errs=[];try{errs=JSON.parse(localStorage.getItem('fa_errors_'+S.user.email)||'[]');}catch(_e){}
       errors.forEach(e=>{errs.unshift({...e,game:gameTitle||gameId,date:new Date().toLocaleDateString('fr-FR'),level:S.level});});
       try{localStorage.setItem('fa_errors_'+S.user.email,JSON.stringify(errs.slice(0,200)));}catch(ex){}
     }
@@ -3963,7 +3964,7 @@ function renderProfil(){
 function exportPresenceCsv(){
   const rows=['Nom,Dispositif,Niveau,Date connexion,Durée (min)'];
   DEMO_STAGS.filter(s=>!s.archived).forEach(s=>{
-    const logs=JSON.parse(localStorage.getItem('fa_pres_'+s.id)||'[]');
+    let logs=[];try{logs=JSON.parse(localStorage.getItem('fa_pres_'+s.id)||'[]');}catch(_e){}
     if(logs.length===0)rows.push(`${s.nom},${s.disp},${s.lv},—,—`);
     else logs.forEach(l=>rows.push(`${s.nom},${s.disp},${s.lv},${l.date},${l.dur||0}`));
   });
@@ -3990,7 +3991,7 @@ function sendMsg(){
   const to=document.getElementById('msg-to')?.value;
   const txt=document.getElementById('msg-text')?.value.trim();
   if(!txt){showToast('Saisissez un message.','error');return;}
-  const msgs=JSON.parse(localStorage.getItem('fa_msgs')||'[]');
+  let msgs=[];try{msgs=JSON.parse(localStorage.getItem('fa_msgs')||'[]');}catch(_e){}
   msgs.unshift({to,text:txt,from:S.user?.prenom||'Formateur',date:new Date().toLocaleDateString('fr-FR'),time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),read:false});
   try{localStorage.setItem('fa_msgs',JSON.stringify(msgs.slice(0,100)));}catch(e){}
   (function(){var _e=document.getElementById('msg-text');if(_e)_e.value='';})();
@@ -3999,7 +4000,7 @@ function sendMsg(){
 function renderMsg(){
   const sel=document.getElementById('msg-to');
   if(sel){sel.innerHTML='<option value="all">📢 Tous les stagiaires</option>'+DEMO_STAGS.filter(s=>!s.archived).map(s=>`<option value="${s.id}">${s.nom}</option>`).join('');}
-  const msgs=JSON.parse(localStorage.getItem('fa_msgs')||'[]');
+  let msgs=[];try{msgs=JSON.parse(localStorage.getItem('fa_msgs')||'[]');}catch(_e){}
   const list=document.getElementById('msg-list');
   if(list){list.innerHTML=msgs.length===0?'<p style="color:var(--muted);font-size:12px">Aucun message envoyé.</p>':msgs.slice(0,10).map(m=>`<div class="msg-item"><div class="msg-from">👤 ${m.from||'Formateur'} → ${m.to==='all'?'Tous les stagiaires':DEMO_STAGS.find(s=>s.id==m.to)?.nom||m.to}</div><div class="msg-text">${m.text}</div><div class="msg-date">${m.date} à ${m.time}</div></div>`).join('');}
   // Update badge dot
@@ -4015,7 +4016,7 @@ function logPresence(){
   if(stagIdx<0)return;
   const stag=DEMO_STAGS[stagIdx];
   const key='fa_pres_'+stag.id;
-  const logs=JSON.parse(localStorage.getItem(key)||'[]');
+  let logs=[];try{logs=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){}
   const today=new Date().toLocaleDateString('fr-FR');
   if(!logs.find(l=>l.date===today)){
     logs.unshift({date:today,dur:0,login:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});
@@ -4026,7 +4027,7 @@ function logPresence(){
     if(window._presStart){
       const dur=Math.round((Date.now()-window._presStart)/60000);
       try{
-        const logs2=JSON.parse(localStorage.getItem(key)||'[]');
+        let logs2=[];try{logs2=JSON.parse(localStorage.getItem(key)||'[]');}catch(_e){}
         if(logs2[0])logs2[0].dur=(logs2[0].dur||0)+dur;
         localStorage.setItem(key,JSON.stringify(logs2));
       }catch(e){}
@@ -4042,7 +4043,7 @@ function renderPresence(){
   if(!list)return;
   const rows=DEMO_STAGS.filter(s=>!s.archived).map(s=>{
     const key='fa_pres_'+s.id;
-    const logs=JSON.parse(localStorage.getItem(key)||'[]');
+    let logs=[];try{logs=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){}
     const todayLog=logs.find(l=>l.date===selDate);
     const present=!!todayLog;
     return `<div class="presence-row">
@@ -4060,7 +4061,7 @@ function renderPresence(){
     </div>`;
   }).join('');
   const present=DEMO_STAGS.filter(s=>!s.archived).filter(s=>{
-    const logs=JSON.parse(localStorage.getItem('fa_pres_'+s.id)||'[]');
+    let logs=[];try{logs=JSON.parse(localStorage.getItem('fa_pres_'+s.id)||'[]');}catch(_e){}
     return logs.find(l=>l.date===selDate);
   }).length;
   list.innerHTML=`<div style="background:var(--white);border-radius:var(--rs);padding:14px;margin-bottom:12px;box-shadow:var(--shadow);display:flex;gap:20px;font-size:13px">
@@ -4075,7 +4076,7 @@ function renderAssign(){
   const gameSel=document.getElementById('asgn-game');
   if(stagSel)stagSel.innerHTML=DEMO_STAGS.filter(s=>!s.archived).map(s=>`<option value="${s.id}">${s.nom} (${s.lv})</option>`).join('');
   if(gameSel){const allG=[...GAMES,...S.customGames];gameSel.innerHTML=allG.map(g=>`<option value="${g.id}">${g.title} (${g.lv})</option>`).join('');}
-  const assigns=JSON.parse(localStorage.getItem('fa_assigns')||'[]');
+  let assigns=[];try{assigns=JSON.parse(localStorage.getItem('fa_assigns')||'[]');}catch(_e){}
   const list=document.getElementById('assign-list');
   if(list)list.innerHTML=assigns.length===0?'<p style="color:var(--muted);font-size:12px">Aucune assignation.</p>':assigns.slice(0,20).map((a,i)=>`<div class="assign-card"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h4>${a.stagName} → ${a.gameName}</h4><p style="font-size:11px;color:var(--muted)">${a.note||''}</p><p style="font-size:10px;color:var(--muted)">${a.date}</p></div><button class="ab rd" onclick="delAssign(${i})">✕</button></div></div>`).join('');
 }
@@ -4086,13 +4087,13 @@ function createAssign(){
   const stag=DEMO_STAGS.find(s=>s.id==sid);
   const game=[...GAMES,...S.customGames].find(g=>g.id===gid);
   if(!stag||!game){showToast('Sélectionnez un stagiaire et un jeu.','error');return;}
-  const assigns=JSON.parse(localStorage.getItem('fa_assigns')||'[]');
+  let assigns=[];try{assigns=JSON.parse(localStorage.getItem('fa_assigns')||'[]');}catch(_e){}
   assigns.unshift({stagId:sid,stagName:stag.nom,gameId:gid,gameName:game.title,note,date:new Date().toLocaleDateString('fr-FR')});
   try{localStorage.setItem('fa_assigns',JSON.stringify(assigns.slice(0,100)));}catch(e){}
   renderAssign();showToast('Jeu assigné à '+stag.nom+' !','success');
 }
 function delAssign(idx){
-  const assigns=JSON.parse(localStorage.getItem('fa_assigns')||'[]');
+  let assigns=[];try{assigns=JSON.parse(localStorage.getItem('fa_assigns')||'[]');}catch(_e){}
   assigns.splice(idx,1);
   try{localStorage.setItem('fa_assigns',JSON.stringify(assigns));}catch(e){}
   renderAssign();
@@ -4721,7 +4722,7 @@ const LS_ACTIVITY = 'fa_activity_log';
 
 function logActivity(action, title, detail=''){
   try{
-    const log = JSON.parse(localStorage.getItem(LS_ACTIVITY)||'[]');
+    let log=[];try{log=JSON.parse(localStorage.getItem(LS_ACTIVITY)||'[]');}catch(e){}
     log.unshift({
       action,   // 'create' | 'edit' | 'delete' | 'login'
       title,
@@ -4735,7 +4736,7 @@ function logActivity(action, title, detail=''){
 }
 
 function renderActivityLog(){
-  const log = JSON.parse(localStorage.getItem(LS_ACTIVITY)||'[]');
+  let log=[];try{log=JSON.parse(localStorage.getItem(LS_ACTIVITY)||'[]');}catch(e){}
   const el = document.getElementById('activity-log-list');
   if(!el) return;
   if(log.length===0){
@@ -4764,7 +4765,7 @@ function clearActivityLog(){
 }
 
 function exportActivityCsv(){
-  const log=JSON.parse(localStorage.getItem(LS_ACTIVITY)||'[]');
+  let log=[];try{log=JSON.parse(localStorage.getItem(LS_ACTIVITY)||'[]');}catch(_e){}
   const rows=['Action,Titre,Détail,Auteur,Date,Heure'];
   log.forEach(e=>rows.push([e.action,e.title,e.detail,e.author,e.date,e.time].map(v=>'"'+String(v||'').replace(/"/g,"'"  )+'"').join(',')));
   const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8'});
@@ -5251,11 +5252,13 @@ if(document.readyState==='complete'){
 
 
 // Check URL params for session joining
-const urlParams=new URLSearchParams(window.location.search);
-if(urlParams.get('code')||urlParams.get('session')||urlParams.get('classe')){
-  const code=urlParams.get('code')||urlParams.get('session')||urlParams.get('classe');
-  showToast(`Session rejointe avec le code : ${code} 📱`,'info');
-}
+try{
+  const urlParams=new URLSearchParams(window.location.search);
+  if(urlParams.get('code')||urlParams.get('session')||urlParams.get('classe')){
+    const code=urlParams.get('code')||urlParams.get('session')||urlParams.get('classe');
+    showToast(`Session rejointe avec le code : ${code} 📱`,'info');
+  }
+}catch(e){}
 </script>
 </body>
 </html>
