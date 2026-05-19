@@ -2818,6 +2818,7 @@ function showMasc(msg,img='léo.png'){
 // MAP
 // ============================================================
 function renderMap(){
+try{
   const allGames=[...GAMES,...(Array.isArray(S.customGames)?S.customGames:[])];
   const lvOrder=['A1','A2','B1','B2','C1','C2'];
   // Compute unlock state: unlocked if badge earned OR is first level
@@ -2848,6 +2849,7 @@ function renderMap(){
       <div style="font-size:11px;color:var(--muted);margin-top:5px;font-weight:600">${isUnlocked?progPct+'% complété':'Verrouillé'}</div>
     </div>`;
   }).join('');
+}catch(e){console.error('renderMap:',e);var _ml=document.getElementById('map-lv-list');if(_ml)_ml.innerHTML='<p style="color:var(--red);padding:20px">⚠️ Erreur de chargement ('+e.message+')</p>';}
 }
 function startLv(lv){S.level=lv;updSidebar();showTab('t-games');(function(){var _e=document.getElementById('gf-lv');if(_e)_e.value=lv;})();filterGames();}
 
@@ -3363,7 +3365,7 @@ function showRes(score,total,xpGain,errors,gameId,gameTitle){
 // BADGES FULL
 // ============================================================
 function renderBadgesFull(){
-  const el=document.getElementById('t-trophees-content');
+  const el=document.getElementById('badges-full');
   if(!el)return;
   const ORDER=['A1','A2','B1','B2','C1','C2'];
   const DEFS={
@@ -3392,6 +3394,96 @@ function renderBadgesFull(){
         '</div></div>';
     }).join('')+'</div>';
 }
+// ============================================================
+// RÉVISION — Mes erreurs
+// ============================================================
+function renderRevision(){
+  const el=document.getElementById('revision-content');
+  if(!el)return;
+  let errs=[];
+  try{errs=JSON.parse(localStorage.getItem('fa_errors_'+(S.user&&S.user.email||''))||'[]');}catch(_e){}
+  if(errs.length===0){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">📋</div><div style="font-weight:700;font-size:16px;margin-bottom:8px">Aucune erreur enregistrée</div><div style="font-size:13px">Vos erreurs apparaîtront ici après vos jeux. Continuez à jouer !</div></div>';
+    return;
+  }
+  el.innerHTML='<div style="margin-bottom:14px;font-size:13px;color:var(--muted)">'+errs.length+' erreur'+(errs.length>1?'s':'')+' enregistrée'+(errs.length>1?'s':'')+'</div>'+
+  errs.map((e,i)=>`<div style="background:var(--white);border:2px solid var(--border);border-left:4px solid var(--red);border-radius:var(--rs);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+      <span style="font-size:11px;font-weight:700;background:var(--orange-l);color:var(--orange-d);padding:2px 8px;border-radius:50px">${e.game||'Jeu'}</span>
+      <span style="font-size:11px;color:var(--muted)">${e.date||''}</span>
+    </div>
+    <div style="font-weight:700;font-size:14px;margin-bottom:6px;color:var(--text)">❓ ${e.q||e.question||'Question'}</div>
+    <div style="font-size:13px;margin-bottom:4px"><span style="color:var(--red)">❌ Votre réponse :</span> <strong>${e.given||'—'}</strong></div>
+    <div style="font-size:13px;margin-bottom:6px"><span style="color:var(--green-d)">✅ Bonne réponse :</span> <strong>${e.correct||e.answer||'—'}</strong></div>
+    ${e.expl?`<div style="font-size:12px;color:var(--muted);background:var(--bg);border-radius:6px;padding:6px 10px">💡 ${e.expl}</div>`:''}
+  </div>`).join('');
+}
+
+// ============================================================
+// PARCOURS — Mon parcours
+// ============================================================
+function renderParcours(){
+  const el=document.getElementById('parcours-content');
+  if(!el)return;
+  const hist=S.gameHistory||[];
+  const totalXP=S.xp||0;
+  const totalGames=Object.keys(S.completedGames||{}).length;
+  const lvOrder=['A1','A2','B1','B2','C1','C2'];
+  const lvColors={A1:'#1ABC9C',A2:'#2980B9',B1:'#E67E22',B2:'#8E44AD',C1:'#C0392B',C2:'#D4AC0D'};
+  // Stats par niveau
+  const byLv={};
+  lvOrder.forEach(l=>{byLv[l]={done:0,total:0};});
+  GAMES.forEach(g=>{if(byLv[g.lv])byLv[g.lv].total++;});
+  Object.entries(S.completedGames||{}).forEach(([id,d])=>{
+    const g=GAMES.find(x=>x.id===id);
+    if(g&&byLv[g.lv]&&d.pct>=70)byLv[g.lv].done++;
+  });
+  el.innerHTML=`
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px">
+    <div style="background:var(--white);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);text-align:center">
+      <div style="font-size:36px;font-weight:800;font-family:'Baloo 2',cursive;color:var(--green)">${totalXP}</div>
+      <div style="font-size:13px;color:var(--muted);font-weight:600">XP Total</div>
+    </div>
+    <div style="background:var(--white);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);text-align:center">
+      <div style="font-size:36px;font-weight:800;font-family:'Baloo 2',cursive;color:var(--blue)">${totalGames}</div>
+      <div style="font-size:13px;color:var(--muted);font-weight:600">Jeux réussis (70%+)</div>
+    </div>
+    <div style="background:var(--white);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);text-align:center">
+      <div style="font-size:36px;font-weight:800;font-family:'Baloo 2',cursive;color:var(--orange)">${S.streak||0}</div>
+      <div style="font-size:13px;color:var(--muted);font-weight:600">Jours de suite 🔥</div>
+    </div>
+  </div>
+  <div style="background:var(--white);border-radius:var(--r);padding:24px;box-shadow:var(--shadow);margin-bottom:20px">
+    <h3 style="font-family:'Baloo 2',cursive;font-size:18px;font-weight:800;margin-bottom:16px">📊 Progression par niveau</h3>
+    ${lvOrder.map(lv=>{
+      const d=byLv[lv];
+      const pct=d.total>0?Math.round(d.done/d.total*100):0;
+      const col=lvColors[lv]||'#ccc';
+      return `<div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-weight:700;font-size:13px">${lv}</span>
+          <span style="font-size:12px;color:var(--muted)">${d.done}/${d.total} jeux (${pct}%)</span>
+        </div>
+        <div style="background:var(--border);border-radius:50px;height:8px;overflow:hidden">
+          <div style="background:${col};height:100%;width:${pct}%;border-radius:50px;transition:.5s"></div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  ${hist.length>0?`<div style="background:var(--white);border-radius:var(--r);padding:24px;box-shadow:var(--shadow)">
+    <h3 style="font-family:'Baloo 2',cursive;font-size:18px;font-weight:800;margin-bottom:16px">📅 Historique récent</h3>
+    ${hist.slice(0,20).map(h=>`<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="width:36px;height:36px;border-radius:8px;background:${lvColors[h.lv]||'var(--bg)'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${h.pct>=70?'✅':'🎮'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.title||h.gameId}</div>
+        <div style="font-size:11px;color:var(--muted)">${h.date||''} · Score: ${h.pct||0}% · +${h.xp||0} XP</div>
+      </div>
+    </div>`).join('')}
+  </div>`:'<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">🎮</div><div style="font-weight:700;font-size:16px">Aucun jeu terminé pour l\'instant</div><div style="font-size:13px;margin-top:8px">Jouez pour voir votre historique ici !</div></div>'}
+  `;
+}
+
+
 function renderDefiDuJour(){
   document.getElementById('t-defi').innerHTML=`<div class="sh">⚡ Défi du jour</div><div style="background:linear-gradient(135deg,var(--orange),var(--orange-d));border-radius:var(--r);padding:24px;color:white;margin-bottom:18px"><div style="font-size:36px;margin-bottom:8px">⚡</div><h2 style="font-family:'Baloo 2',cursive;font-size:20px;font-weight:800;margin-bottom:6px">Défi du jour !</h2><p style="opacity:.85;font-size:14px">Complétez 3 activités aujourd'hui pour gagner un bonus de 50 XP !</p><div style="margin-top:14px;display:flex;align-items:center;gap:10px"><div style="flex:1;height:9px;background:rgba(255,255,255,.3);border-radius:50px;overflow:hidden"><div style="height:100%;background:white;border-radius:50px;width:33%"></div></div><span style="font-weight:800;font-size:13px">1/3</span></div></div><button class="bsub" onclick="showTab('t-games')">🎮 Jouer maintenant</button>`;
 }
