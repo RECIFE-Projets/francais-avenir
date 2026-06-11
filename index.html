@@ -2488,9 +2488,6 @@ function goDash(){saveUserData();updSidebar();updDash();goTo('page-dash');showTa
 // TEST DE POSITIONNEMENT
 // ============================================================
 let testQs=[],testCur=0,testScore=0,testTimer,testErrors=[];
-const progTestLvOrder=['A1','A2','B1','B2','C1','C2'];
-const progTestQPerLevel=5;
-let progTestLevel=0,progTestLevelScores={},progTestStopped=false;
 // Build large randomized pool — different per session
 function buildTestPool(){
   const pool=[];
@@ -2617,7 +2614,6 @@ function answerTest(idx,correct,btn){
   if(idx!==correct){
     btn.classList.add('wrong');
     testErrors.push({q:testQs[testCur].q,given:testQs[testCur].opts[idx],correct:testQs[testCur].opts[correct],expl:testQs[testCur].expl});
-      const _lv2=progTestLvOrder[progTestLevel];if(_lv2&&progTestLevelScores[_lv2])progTestLevelScores[_lv2].wrong.push({q:testQs[testCur].q,given:testQs[testCur].opts[idx],correct:testQs[testCur].opts[correct],expl:testQs[testCur].expl});
   }
   const fb=document.getElementById('tfb');
   fb.className='gp-fb show '+(idx===correct?'correct':'wrong');
@@ -2626,7 +2622,7 @@ function answerTest(idx,correct,btn){
   document.getElementById('tnxt')?.classList.add('show');
 }
 function nextTestQ(){
-  if(_testCorrect){testScore++;const _curlv=progTestLvOrder[progTestLevel];if(_curlv&&progTestLevelScores[_curlv])progTestLevelScores[_curlv].correct++;}
+  if(_testCorrect)testScore++;
   _testCorrect=false;
   testCur++;
   if(testCur>=testQs.length){
@@ -2824,12 +2820,13 @@ function showMasc(msg,img='léo.png'){
 function renderMap(){
 try{
   const allGames=[...GAMES,...(Array.isArray(S.customGames)?S.customGames:[])];
-  const lvOrder=['A1','A2','B1','B2','C1','C2'];
-  // Compute unlock state: unlocked if badge earned OR is first level
+  const el=document.getElementById('map-lv-list');
+  if(!el)return;
   const unlockedLevels=new Set(['A1',...S.badges]);
-  document.getElementById('map-lv-list').innerHTML=LVDATA.map((lv,i)=>{
-    const gamesInLv=allGames.filter(g=>g.lv===lv.code);
-    const doneInLv=gamesInLv.filter(g=>S.completedGames[g.id]&&S.completedGames[g.id].pct>=70).length;
+  let html='';
+  LVDATA.forEach(function(lv){
+    const gamesInLv=allGames.filter(function(g){return g.lv===lv.code;});
+    const doneInLv=gamesInLv.filter(function(g){return S.completedGames[g.id]&&S.completedGames[g.id].pct>=70;}).length;
     const totalInLv=Math.max(gamesInLv.length,1);
     const progPct=Math.round(doneInLv/totalInLv*100);
     const isUnlocked=unlockedLevels.has(lv.code);
@@ -2838,23 +2835,39 @@ try{
     const st=!isUnlocked?'locked':isDone?'done':'current';
     const ico=st==='locked'?'🔒':isDone?'✅':isCurrent?'⭐':'▶️';
     const needed=Math.max(0,3-doneInLv);
-    const lockedTip=!isUnlocked?`Terminez ${needed} jeu${needed>1?'x':''} au niveau précédent (70%+) pour débloquer`:'';
-    return `<div class="map-lv ${lv.code.toLowerCase()} ${st}" style="border-color:${lv.color};background:${lv.color}11;cursor:${isUnlocked?'pointer':'not-allowed'}" onclick="${isUnlocked?`startLv('${lv.code}')`:''}" title="${lockedTip}">
-      <div class="map-lv-h">
-        <div class="map-lv-ico" style="background:${lv.color}22">${lv.icon}</div>
-        <div class="map-lv-info">
-          <h3 style="color:${lv.color}">${lv.code} – ${lv.name}</h3>
-          <p>${lv.desc}</p>
-          ${isUnlocked?`<p style="font-size:11px;color:var(--muted);margin-top:4px">✅ ${doneInLv}/${totalInLv} jeux réussis (70%+)</p>`:`<p style="font-size:11px;color:var(--red);margin-top:4px">🔒 ${lockedTip}</p>`}
-        </div>
-        <div class="map-lv-st">${ico}</div>
-      </div>
-      <div class="pm"><div class="pmf" style="width:${isUnlocked?progPct:0}%;background:${lv.color}"></div></div>
-      <div style="font-size:11px;color:var(--muted);margin-top:5px;font-weight:600">${isUnlocked?progPct+'% complété':'Verrouillé'}</div>
-    </div>`;
-  }).join('');
-}catch(e){console.error('renderMap:',e);var _ml=document.getElementById('map-lv-list');if(_ml)_ml.innerHTML='<p style="color:var(--red);padding:20px">⚠️ Erreur de chargement ('+e.message+')</p>';}
+    const lockedTip=!isUnlocked?('Terminez '+needed+' jeu'+(needed>1?'x':'')+' au niveau précédent (70%+) pour débloquer'):'';
+    const cursorStyle=isUnlocked?'pointer':'not-allowed';
+    const onclickAttr=isUnlocked?(' onclick="startLv(\''+lv.code+'\')"'):'';
+    const progressInfo=isUnlocked
+      ?('<p style="font-size:11px;color:var(--muted);margin-top:4px">✅ '+doneInLv+'/'+totalInLv+' jeux réussis (70%+)</p>')
+      :('<p style="font-size:11px;color:var(--red);margin-top:4px">🔒 '+lockedTip+'</p>');
+    const widthPct=isUnlocked?progPct:0;
+    const bottomLabel=isUnlocked?(progPct+'% complété'):'Verrouillé';
+    html+='<div class="map-lv '+lv.code.toLowerCase()+' '+st+'"'
+      +' style="border-color:'+lv.color+';background:'+lv.color+'11;cursor:'+cursorStyle+'"'
+      +onclickAttr
+      +' title="'+lockedTip+'">'
+      +'<div class="map-lv-h">'
+      +'<div class="map-lv-ico" style="background:'+lv.color+'22">'+lv.icon+'</div>'
+      +'<div class="map-lv-info">'
+      +'<h3 style="color:'+lv.color+'">'+lv.code+' – '+lv.name+'</h3>'
+      +'<p>'+lv.desc+'</p>'
+      +progressInfo
+      +'</div>'
+      +'<div class="map-lv-st">'+ico+'</div>'
+      +'</div>'
+      +'<div class="pm"><div class="pmf" style="width:'+widthPct+'%;background:'+lv.color+'"></div></div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:5px;font-weight:600">'+bottomLabel+'</div>'
+      +'</div>';
+  });
+  el.innerHTML=html;
+}catch(e){
+  console.error('renderMap:',e);
+  var _ml=document.getElementById('map-lv-list');
+  if(_ml)_ml.innerHTML='<p style="color:var(--red);padding:20px">⚠️ Erreur carte ('+e.message+')</p>';
 }
+}
+
 function startLv(lv){S.level=lv;updSidebar();showTab('t-games');(function(){var _e=document.getElementById('gf-lv');if(_e)_e.value=lv;})();filterGames();}
 
 // ============================================================
