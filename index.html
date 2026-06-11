@@ -2488,6 +2488,9 @@ function goDash(){saveUserData();updSidebar();updDash();goTo('page-dash');showTa
 // TEST DE POSITIONNEMENT
 // ============================================================
 let testQs=[],testCur=0,testScore=0,testTimer,testErrors=[];
+const progTestLvOrder=['A1','A2','B1','B2','C1','C2'];
+const progTestQPerLevel=5;
+let progTestLevel=0,progTestLevelScores={},progTestStopped=false;
 // Build large randomized pool — different per session
 function buildTestPool(){
   const pool=[];
@@ -2614,6 +2617,7 @@ function answerTest(idx,correct,btn){
   if(idx!==correct){
     btn.classList.add('wrong');
     testErrors.push({q:testQs[testCur].q,given:testQs[testCur].opts[idx],correct:testQs[testCur].opts[correct],expl:testQs[testCur].expl});
+      const _lv2=progTestLvOrder[progTestLevel];if(_lv2&&progTestLevelScores[_lv2])progTestLevelScores[_lv2].wrong.push({q:testQs[testCur].q,given:testQs[testCur].opts[idx],correct:testQs[testCur].opts[correct],expl:testQs[testCur].expl});
   }
   const fb=document.getElementById('tfb');
   fb.className='gp-fb show '+(idx===correct?'correct':'wrong');
@@ -2622,7 +2626,7 @@ function answerTest(idx,correct,btn){
   document.getElementById('tnxt')?.classList.add('show');
 }
 function nextTestQ(){
-  if(_testCorrect)testScore++;
+  if(_testCorrect){testScore++;const _curlv=progTestLvOrder[progTestLevel];if(_curlv&&progTestLevelScores[_curlv])progTestLevelScores[_curlv].correct++;}
   _testCorrect=false;
   testCur++;
   if(testCur>=testQs.length){
