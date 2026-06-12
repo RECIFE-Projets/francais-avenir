@@ -2213,36 +2213,7 @@ function setLang(lang){
   // Boutons page d'accueil
   const btnCta=document.querySelector('.hbtn.cta');if(btnCta)btnCta.textContent=tr.cta;
   const btnSec=document.querySelector('.hbtn.sec');if(btnSec)btnSec.textContent=tr.sec;
-  // Nav items sidebar
-  el.innerHTML=`<div class="sh">🗓️ Mon parcours — Niveau ${S.level}</div>
-  ${myAssigns.length>0?`<div style="background:var(--orange-l);border:1.5px solid var(--orange);border-radius:var(--rs);padding:14px;margin-bottom:16px">
-    <div style="font-weight:700;font-size:13px;margin-bottom:8px">📌 Jeux assignés par votre formateur</div>
-    ${myAssigns.map(a=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(243,156,18,.3)"><span style="font-size:18px">📌</span><div style="flex:1"><div style="font-weight:700;font-size:12px">${a.gameName}</div>${a.note?`<div style="font-size:11px;color:var(--orange-d)">${a.note}</div>`:''}</div><button class="ab or" style="font-size:11px" onclick="launchGame('${a.gameId}')">▶ Jouer</button></div>`).join('')}
-  </div>`:''}
-  <div class="parcours-card">
-    <div class="sh" style="font-size:14px;margin-bottom:10px">📅 Activités recommandées cette semaine</div>
-    ${todo.length===0?'<p style="color:var(--green-d);font-size:13px">🎉 Excellent ! Vous avez terminé tous les jeux du niveau '+S.level+' à 70%+. Passez au niveau suivant !</p>':
-    todo.map((g,i)=>`<div class="parcours-step">
-      <div class="parcours-num${doneIds.includes(g.id)?' done':''}">${i+1}</div>
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:13px">${g.icon||'🎮'} ${g.title}</div>
-        <div style="font-size:11px;color:var(--muted)">${g.type} · +${g.xp} XP · ${g.cat||''}</div>
-      </div>
-      <button class="ab gr" style="font-size:11px" onclick="launchGame('${g.id}')">▶ Jouer</button>
-    </div>`).join('')}
-  </div>
-  ${done.length>0?`<div class="parcours-card" style="border-left:4px solid var(--green)">
-    <div class="sh" style="font-size:14px;color:var(--green-d);margin-bottom:10px">✅ Jeux maîtrisés (${done.length})</div>
-    ${done.map(g=>`<div class="parcours-step" style="opacity:.7">
-      <div class="parcours-num done">✓</div>
-      <div style="flex:1"><div style="font-weight:700;font-size:12px">${g.title}</div></div>
-      <span style="font-size:11px;color:var(--green-d)">${S.completedGames[g.id]?.pct||0}%</span>
-    </div>`).join('')}
-  </div>`:''}`;
 }
-
-
-
 
 const LOADING_TIPS_LIST=[
   'Chargement des jeux...','Préparation des exercices...','Mise en place des niveaux A1→C2...',
@@ -2488,6 +2459,9 @@ function goDash(){saveUserData();updSidebar();updDash();goTo('page-dash');showTa
 // TEST DE POSITIONNEMENT
 // ============================================================
 let testQs=[],testCur=0,testScore=0,testTimer,testErrors=[];
+const progTestLvOrder=['A1','A2','B1','B2','C1','C2'];
+const progTestQPerLevel=5;
+let progTestLevel=0,progTestLevelScores={},progTestStopped=false;
 // Build large randomized pool — different per session
 function buildTestPool(){
   const pool=[];
@@ -2622,7 +2596,7 @@ function answerTest(idx,correct,btn){
   document.getElementById('tnxt')?.classList.add('show');
 }
 function nextTestQ(){
-  if(_testCorrect)testScore++;
+  if(_testCorrect){testScore++;var _cl=progTestLvOrder[progTestLevel];if(_cl&&progTestLevelScores[_cl])progTestLevelScores[_cl].correct++;}
   _testCorrect=false;
   testCur++;
   if(testCur>=testQs.length){
@@ -2818,54 +2792,58 @@ function showMasc(msg,img='léo.png'){
 // MAP
 // ============================================================
 function renderMap(){
-try{
-  const allGames=[...GAMES,...(Array.isArray(S.customGames)?S.customGames:[])];
-  const el=document.getElementById('map-lv-list');
-  if(!el)return;
-  const unlockedLevels=new Set(['A1',...S.badges]);
-  let html='';
-  LVDATA.forEach(function(lv){
-    const gamesInLv=allGames.filter(function(g){return g.lv===lv.code;});
-    const doneInLv=gamesInLv.filter(function(g){return S.completedGames[g.id]&&S.completedGames[g.id].pct>=70;}).length;
-    const totalInLv=Math.max(gamesInLv.length,1);
-    const progPct=Math.round(doneInLv/totalInLv*100);
-    const isUnlocked=unlockedLevels.has(lv.code);
-    const isCurrent=lv.code===S.level;
-    const isDone=progPct>=80;
-    const st=!isUnlocked?'locked':isDone?'done':'current';
-    const ico=st==='locked'?'🔒':isDone?'✅':isCurrent?'⭐':'▶️';
-    const needed=Math.max(0,3-doneInLv);
-    const lockedTip=!isUnlocked?('Terminez '+needed+' jeu'+(needed>1?'x':'')+' au niveau précédent (70%+) pour débloquer'):'';
-    const cursorStyle=isUnlocked?'pointer':'not-allowed';
-    const onclickAttr=isUnlocked?(' onclick="startLv(\''+lv.code+'\')"'):'';
-    const progressInfo=isUnlocked
-      ?('<p style="font-size:11px;color:var(--muted);margin-top:4px">✅ '+doneInLv+'/'+totalInLv+' jeux réussis (70%+)</p>')
-      :('<p style="font-size:11px;color:var(--red);margin-top:4px">🔒 '+lockedTip+'</p>');
-    const widthPct=isUnlocked?progPct:0;
-    const bottomLabel=isUnlocked?(progPct+'% complété'):'Verrouillé';
-    html+='<div class="map-lv '+lv.code.toLowerCase()+' '+st+'"'
-      +' style="border-color:'+lv.color+';background:'+lv.color+'11;cursor:'+cursorStyle+'"'
-      +onclickAttr
-      +' title="'+lockedTip+'">'
-      +'<div class="map-lv-h">'
-      +'<div class="map-lv-ico" style="background:'+lv.color+'22">'+lv.icon+'</div>'
-      +'<div class="map-lv-info">'
-      +'<h3 style="color:'+lv.color+'">'+lv.code+' – '+lv.name+'</h3>'
-      +'<p>'+lv.desc+'</p>'
-      +progressInfo
-      +'</div>'
-      +'<div class="map-lv-st">'+ico+'</div>'
-      +'</div>'
-      +'<div class="pm"><div class="pmf" style="width:'+widthPct+'%;background:'+lv.color+'"></div></div>'
-      +'<div style="font-size:11px;color:var(--muted);margin-top:5px;font-weight:600">'+bottomLabel+'</div>'
-      +'</div>';
-  });
-  el.innerHTML=html;
-}catch(e){
-  console.error('renderMap:',e);
-  var _ml=document.getElementById('map-lv-list');
-  if(_ml)_ml.innerHTML='<p style="color:var(--red);padding:20px">⚠️ Erreur carte ('+e.message+')</p>';
-}
+  try{
+    var allGames=GAMES.concat(Array.isArray(S.customGames)?S.customGames:[]);
+    var badges=Array.isArray(S.badges)?S.badges:['A1'];
+    var completed=S.completedGames&&typeof S.completedGames==='object'?S.completedGames:{};
+    var unlockedLevels={'A1':true};
+    badges.forEach(function(b){unlockedLevels[b]=true;});
+    var html='';
+    LVDATA.forEach(function(lv){
+      var gamesInLv=allGames.filter(function(g){return g.lv===lv.code;});
+      var doneInLv=gamesInLv.filter(function(g){
+        return completed[g.id]&&completed[g.id].pct>=70;
+      }).length;
+      var totalInLv=Math.max(gamesInLv.length,1);
+      var progPct=Math.round(doneInLv/totalInLv*100);
+      var isUnlocked=!!unlockedLevels[lv.code];
+      var isCurrent=lv.code===S.level;
+      var isDone=progPct>=80;
+      var needed=Math.max(0,3-doneInLv);
+      var lockedTip=isUnlocked?'':('Terminez '+needed+' jeu'+(needed>1?'x':'')+' au niveau précédent (70%+) pour débloquer');
+      var st=isUnlocked?(isDone?'done':'current'):'locked';
+      var ico=isUnlocked?(isDone?'✅':(isCurrent?'⭐':'▶️')):'🔒';
+      var cursor=isUnlocked?'pointer':'not-allowed';
+      var progressInfo=isUnlocked
+        ?('<p style="font-size:11px;color:var(--muted);margin-top:4px">✅ '+doneInLv+'/'+totalInLv+' jeux réussis (70%+)</p>')
+        :('<p style="font-size:11px;color:var(--red);margin-top:4px">🔒 '+lockedTip+'</p>');
+      var barWidth=isUnlocked?progPct:0;
+      var label=isUnlocked?(progPct+'% complété'):'Verrouillé';
+      var clickAttr=isUnlocked?' onclick="startLv(\'' +lv.code+ '\')"':'';
+      html+='<div class="map-lv '+lv.code.toLowerCase()+' '+st+'"'
+        +' style="border-color:'+lv.color+';background:'+lv.color+'22;cursor:'+cursor+'"'
+        +clickAttr
+        +'>'
+        +'<div class="map-lv-h">'
+        +'<div class="map-lv-ico" style="background:'+lv.color+'33">'+lv.icon+'</div>'
+        +'<div class="map-lv-info">'
+        +'<h3 style="color:'+lv.color+'">'+lv.code+' – '+lv.name+'</h3>'
+        +'<p>'+lv.desc+'</p>'
+        +progressInfo
+        +'</div>'
+        +'<div class="map-lv-st">'+ico+'</div>'
+        +'</div>'
+        +'<div class="pm"><div class="pmf" style="width:'+barWidth+'%;background:'+lv.color+'"></div></div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:5px;font-weight:600">'+label+'</div>'
+        +'</div>';
+    });
+    var el=document.getElementById('map-lv-list');
+    if(el)el.innerHTML=html;
+  }catch(e){
+    console.error('renderMap error:',e);
+    var el2=document.getElementById('map-lv-list');
+    if(el2)el2.innerHTML='<p style="color:var(--red);padding:20px;font-weight:700">⚠️ Erreur: '+e.message+'</p>';
+  }
 }
 
 function startLv(lv){S.level=lv;updSidebar();showTab('t-games');(function(){var _e=document.getElementById('gf-lv');if(_e)_e.value=lv;})();filterGames();}
